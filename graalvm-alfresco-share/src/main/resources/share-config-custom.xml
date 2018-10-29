@@ -1,0 +1,248 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<alfresco-config>
+
+   <config replace="true">
+      <flags>
+         <client-debug>%DEBUG%</client-debug>
+         <client-debug-autologging>false</client-debug-autologging>
+      </flags>
+   </config>
+
+   <config evaluator="string-compare" condition="WebFramework">
+      <web-framework>
+         <autowire>
+            <mode>%MODE%</mode>
+         </autowire>
+
+         <module-deployment>
+            <mode>manual</mode>
+            <enable-auto-deploy-modules>true</enable-auto-deploy-modules>
+         </module-deployment>
+      </web-framework>
+   </config>
+
+   <config evaluator="string-compare" condition="DocumentLibrary">
+      <repository-url>http://%PUBLIC_REPOSITORY_HOST%:%PUBLIC_REPOSITORY_PORT%/alfresco</repository-url>
+   </config>
+
+   <config evaluator="string-compare" condition="CSRFPolicy">
+      <properties>
+         <referer>^https?://(%PUBLIC_SHARE_HOST_PATTERN%%PUBLIC_SHARE_PORT_PATTERN%|localhost%LOCAL_PORT_PATTERN%)(?:$|/.+$)</referer>
+         <origin>^https?://(%PUBLIC_SHARE_HOST_PATTERN%%PUBLIC_SHARE_PORT_PATTERN%|localhost%LOCAL_PORT_PATTERN%)(?:$|/.+$)</origin>
+      </properties>
+   </config>
+
+   <!--%ACCESS_PUBLIC_REPOSITORY_VIA_SSL%
+   <config evaluator="string-compare" condition="DocumentLibrary">
+      <repository-url>https://%PUBLIC_REPOSITORY_HOST%:%PUBLIC_REPOSITORY_SSL_PORT%/alfresco</repository-url>
+   </config>
+   %ACCESS_PUBLIC_REPOSITORY_VIA_SSL%-->
+
+   <config evaluator="string-compare" condition="Remote">
+      <remote>
+         <endpoint>
+            <id>alfresco-noauth</id>
+            <name>Alfresco - unauthenticated access</name>
+            <description>Access to Alfresco Repository WebScripts that do not require authentication</description>
+            <connector-id>alfresco</connector-id>
+            <endpoint-url>http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/alfresco/s</endpoint-url>
+            <identity>none</identity>
+         </endpoint>
+
+         <endpoint>
+            <id>alfresco</id>
+            <name>Alfresco - user access</name>
+            <description>Access to Alfresco Repository WebScripts that require user authentication</description>
+            <connector-id>alfresco</connector-id>
+            <endpoint-url>http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/alfresco/s</endpoint-url>
+            <identity>user</identity>
+         </endpoint>
+
+         <endpoint>
+            <id>alfresco-feed</id>
+            <name>Alfresco Feed</name>
+            <description>Alfresco Feed - supports basic HTTP authentication via the EndPointProxyServlet</description>
+            <connector-id>http</connector-id>
+            <endpoint-url>http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/alfresco/s</endpoint-url>
+            <basic-auth>true</basic-auth>
+            <identity>user</identity>
+         </endpoint>
+
+         <endpoint>
+            <id>alfresco-api</id>
+            <parent-id>alfresco</parent-id>
+            <name>Alfresco Public API - user access</name>
+            <description>Access to Alfresco Repository Public API that require user authentication.
+               This makes use of the authentication that is provided by parent 'alfresco' endpoint.</description>
+            <connector-id>alfresco</connector-id>
+            <endpoint-url>http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/alfresco/api</endpoint-url>
+            <identity>user</identity>
+         </endpoint>
+      </remote>
+   </config>
+   
+   <!--%ACTIVATE_SSO%
+   <config evaluator="string-compare" condition="Remote">
+      <remote>
+         <connector>
+            <id>alfrescoCookie</id>
+            <name>Alfresco Connector</name>
+            <description>Connects to an Alfresco instance using cookie-based authentication</description>
+            <class>org.alfresco.web.site.servlet.SlingshotAlfrescoConnector</class>
+         </connector>
+
+         <connector>
+            <id>alfrescoHeader</id>
+            <name>Alfresco Connector</name>
+            <description>Connects to an Alfresco instance using header and cookie-based authentication</description>
+            <class>org.alfresco.web.site.servlet.SlingshotAlfrescoConnector</class>
+            <userHeader>SsoUserHeader</userHeader>
+         </connector>
+
+         <endpoint>
+            <id>alfresco</id>
+            <name>Alfresco - user access</name>
+            <description>Access to Alfresco Repository WebScripts that require user authentication</description>
+            <connector-id>alfrescoCookie</connector-id>
+            <endpoint-url>http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/alfresco/wcs</endpoint-url>
+            <identity>user</identity>
+            <external-auth>true</external-auth>
+         </endpoint>
+
+         <endpoint>
+            <id>alfresco-feed</id>
+            <name>Alfresco Feed</name>
+            <description>Alfresco Feed - supports basic HTTP authentication via the EndPointProxyServlet</description>
+            <connector-id>alfrescoHeader</connector-id>
+            <endpoint-url>http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/alfresco/wcs</endpoint-url>
+            <basic-auth>true</basic-auth>
+            <identity>user</identity>
+            <external-auth>true</external-auth>
+         </endpoint>
+
+         <endpoint>
+            <id>alfresco-api</id>
+            <parent-id>alfresco</parent-id>
+            <name>Alfresco Public API - user access</name>
+            <description>Access to Alfresco Repository Public API that require user authentication.
+               This makes use of the authentication that is provided by parent 'alfresco' endpoint.</description>
+            <connector-id>alfrescoHeader</connector-id>
+            <endpoint-url>http://%REPOSITORY_HOST%:%REPOSITORY_PORT%/alfresco/api</endpoint-url>
+            <identity>user</identity>
+            <external-auth>true</external-auth>
+         </endpoint>
+      </remote>
+   </config>
+   %ACTIVATE_SSO%-->
+
+   <!--%ACCESS_REPOSITORY_VIA_SSL%
+   <config evaluator="string-compare" condition="Remote">
+      <remote>
+         <ssl-config>
+            <keystore-path>alfresco/web-extension/alfresco-system.p12</keystore-path>
+            <keystore-type>pkcs12</keystore-type>
+            <keystore-password>%KEYSTORE_PASSWORD%</keystore-password>
+
+            <truststore-path>alfresco/web-extension/ssl-truststore</truststore-path>
+            <truststore-type>JCEKS</truststore-type>
+            <truststore-password>%TRUSTSTORE_PASSWORD%</truststore-password>
+
+            <verify-hostname>true</verify-hostname>
+         </ssl-config>
+
+         <endpoint>
+            <id>alfresco-noauth</id>
+            <name>Alfresco - unauthenticated access</name>
+            <description>Access to Alfresco Repository WebScripts that do not require authentication</description>
+            <connector-id>alfresco</connector-id>
+            <endpoint-url>https://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco/s</endpoint-url>
+            <identity>none</identity>
+         </endpoint>
+
+         <endpoint>
+            <id>alfresco</id>
+            <name>Alfresco - user access</name>
+            <description>Access to Alfresco Repository WebScripts that require user authentication</description>
+            <connector-id>alfresco</connector-id>
+            <endpoint-url>https://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco/s</endpoint-url>
+            <identity>user</identity>
+         </endpoint>
+
+         <endpoint>
+            <id>alfresco-feed</id>
+            <name>Alfresco Feed</name>
+            <description>Alfresco Feed - supports basic HTTP authentication via the EndPointProxyServlet</description>
+            <connector-id>http</connector-id>
+            <endpoint-url>https://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco/s</endpoint-url>
+            <basic-auth>true</basic-auth>
+            <identity>user</identity>
+         </endpoint>
+
+         <endpoint>
+            <id>alfresco-api</id>
+            <parent-id>alfresco</parent-id>
+            <name>Alfresco Public API - user access</name>
+            <description>Access to Alfresco Repository Public API that require user authentication.
+               This makes use of the authentication that is provided by parent 'alfresco' endpoint.</description>
+            <connector-id>alfresco</connector-id>
+            <endpoint-url>https://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco/api</endpoint-url>
+            <identity>user</identity>
+         </endpoint>
+      </remote>
+   </config>
+   %ACCESS_REPOSITORY_VIA_SSL%-->
+   
+   <!--%ACTIVATE_SSO_VIA_SSL%
+   <config evaluator="string-compare" condition="Remote">
+      <remote>
+         <connector>
+            <id>alfrescoCookie</id>
+            <name>Alfresco Connector</name>
+            <description>Connects to an Alfresco instance using cookie-based authentication</description>
+            <class>org.alfresco.web.site.servlet.SlingshotAlfrescoConnector</class>
+         </connector>
+
+         <connector>
+            <id>alfrescoHeader</id>
+            <name>Alfresco Connector</name>
+            <description>Connects to an Alfresco instance using header and cookie-based authentication</description>
+            <class>org.alfresco.web.site.servlet.SlingshotAlfrescoConnector</class>
+            <userHeader>SsoUserHeader</userHeader>
+         </connector>
+
+         <endpoint>
+            <id>alfresco</id>
+            <name>Alfresco - user access</name>
+            <description>Access to Alfresco Repository WebScripts that require user authentication</description>
+            <connector-id>alfrescoCookie</connector-id>
+            <endpoint-url>https://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco/wcs</endpoint-url>
+            <identity>user</identity>
+            <external-auth>true</external-auth>
+         </endpoint>
+
+         <endpoint>
+            <id>alfresco-feed</id>
+            <name>Alfresco Feed</name>
+            <description>Alfresco Feed - supports basic HTTP authentication via the EndPointProxyServlet</description>
+            <connector-id>alfrescoHeader</connector-id>
+            <endpoint-url>https://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco/wcs</endpoint-url>
+            <basic-auth>true</basic-auth>
+            <identity>user</identity>
+            <external-auth>true</external-auth>
+         </endpoint>
+
+         <endpoint>
+            <id>alfresco-api</id>
+            <parent-id>alfresco</parent-id>
+            <name>Alfresco Public API - user access</name>
+            <description>Access to Alfresco Repository Public API that require user authentication.
+               This makes use of the authentication that is provided by parent 'alfresco' endpoint.</description>
+            <connector-id>alfrescoHeader</connector-id>
+            <endpoint-url>https://%REPOSITORY_HOST%:%REPOSITORY_SSL_PORT%/alfresco/api</endpoint-url>
+            <identity>user</identity>
+            <external-auth>true</external-auth>
+         </endpoint>
+      </remote>
+   </config>
+   %ACTIVATE_SSO_VIA_SSL%-->
+</alfresco-config>

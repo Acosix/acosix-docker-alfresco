@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>de.acosix.docker</groupId>
+        <artifactId>parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>de.acosix.docker.alfresco</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <docker.labels.namespace>de.acosix.docker.alfresco</docker.labels.namespace>
+    </properties>
+
+    <modules>
+        <module>jdk8-alfresco-repository</module>
+        <module>jdk8-alfresco-share</module>
+        <module>jdk8-alfresco-solr4</module>
+        <module>jdk8-alfresco-search-services</module>
+        <module>graalvm-alfresco-repository</module>
+        <module>graalvm-alfresco-share</module>
+        <module>graalvm-alfresco-solr4</module>
+        <module>graalvm-alfresco-search-services</module>
+    </modules>
+</project>
