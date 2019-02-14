@@ -54,8 +54,10 @@ then
    then
       mkdir -p /srv/alfresco/data/contentstore
       mkdir -p /srv/alfresco/data/contentstore.deleted
-      chown -R tomcat8:tomcat8 /srv/alfresco/data
    fi
+
+   # always ensure tomcat8 user owns the contentstore data
+   chown -R tomcat8:tomcat8 /srv/alfresco/data
 
    if [[ $POSTGRES_ENABLED == true ]]
    then

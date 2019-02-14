@@ -209,7 +209,7 @@ then
       fi
    done
 
-   # all files/folders should belong to solr user to ensure proper access
+   # always ensure ass user owns the index/config/cache
    chown -R ass:ass /srv/alfresco-search-services
 
    touch /var/log/alfresco-search-services/.solr-logrotate-dummy

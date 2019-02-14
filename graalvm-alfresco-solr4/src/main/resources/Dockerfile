@@ -6,7 +6,6 @@ COPY defaultKeystore /tmp/defaultKeystore/
 
 # apply our SOLR 4 default configurations
 RUN mv /tmp/solr4-logrotate.d /etc/logrotate.d/alfresco-solr4 \
-   && touch /var/lib/tomcat8/logs/.solr4-logrotate-dummy \
    && mv /tmp/prepareSolr4Files.js /var/lib/tomcat8/ \
    && mv /tmp/solr4-ng.conf /etc/syslog-ng/conf.d/solr4-ng.conf \
    && mv /tmp/initSolr4.sh /etc/my_init.d/50_initSolr4.sh \
@@ -30,7 +29,8 @@ ENV MAVEN_REQUIRED_ARTIFACTS= \
 EXPOSE 8080 8081 8082 8083 5003
 
 # having SOLR core configurations in an externalised volume is optional - index is expected to be always externalised
-VOLUME ["/srv/alfresco-solr4/index", "/srv/alfresco-solr4/coreConfigs", "/srv/alfresco-solr4/keystore", "/srv/alfresco-solr4/defaultArtifacts"]
+# we also support /srv/alfresco-solr4/defaultArtifacts but don't want to force a volume to be auto-created if not bound
+VOLUME ["/srv/alfresco-solr4/index", "/srv/alfresco-solr4/coreConfigs", "/srv/alfresco-solr4/keystore"]
 
 LABEL vendor="${docker.labels.vendor}" \
    ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \

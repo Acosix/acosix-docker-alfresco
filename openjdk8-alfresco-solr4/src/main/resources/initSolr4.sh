@@ -81,7 +81,6 @@ then
    then
       echo "Initialising keystore from default"
       cp /srv/alfresco-solr4/defaultKeystore/* /srv/alfresco-solr4/keystore/ 2>/dev/null || :
-      chown tomcat8:tomcat8 /srv/alfresco-solr4/keystore/*
    fi
 
    echo "Setting up raw HTTP connector"
@@ -214,7 +213,7 @@ then
 
    for i in `env`
    do
-        if [[ $i == CORE_* ]]
+      if [[ $i == CORE_* ]]
       then
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          coreName=`echo $key | cut -d '.' -f 1`
@@ -247,6 +246,10 @@ then
          fi
       fi
    done
-   
+
+   # always ensure tomcat8 user owns the index/config/cache
+   chown -R ass:ass /srv/alfresco-solr4
+
+   touch /var/log/tomcat8/.solr4-logrotate-dummy
    touch /var/lib/tomcat8/.solr4InitDone
 fi
