@@ -387,7 +387,7 @@ function installArtifacts(platformWar, mmtJar, artifactsToInstall)
 {
    artifactsToInstall.forEach(function (artifact)
    {
-      var cmdLine, process, uri, zipFs;
+      var cmdLine, processBuilder, process, uri, zipFs;
       if (artifact.packaging === 'amp' || artifact.downloadedArtifactFile.name.endsWith('.amp'))
       {
          cmdLine = '';
@@ -396,7 +396,9 @@ function installArtifacts(platformWar, mmtJar, artifactsToInstall)
             cmdLine = 'cmd /c ';
          }
          cmdLine += 'java -jar ' + mmtJar.downloadedArtifactFile.canonicalPath + ' install ' + artifact.downloadedArtifactFile.canonicalPath + ' ' + platformWar.downloadedArtifactFile.canonicalPath;
-         process = java.lang.Runtime.getRuntime().exec(cmdLine);
+         processBuilder = new java.lang.ProcessBuilder(cmdLine.split(/\s/));
+         processBuilder.inheritIO();
+         process = processBuilder.start();
          
          if (process.waitFor() !== 0)
          {
@@ -408,81 +410,31 @@ function installArtifacts(platformWar, mmtJar, artifactsToInstall)
 
 function main()
 {
-   var alfrescoVersions, alfrescoArtifacts, repositories, artifacts, requiredAlfrescoArtifacts, artifactsToInstall;
+   var alfrescoVersions, alfrescoArtifacts, repositories, artifacts, requiredAlfrescoArtifacts;
    
    alfrescoVersions = {
-      platform : envOr('ALFRESCO_PLATFORM_VERSION', '6.0.7-ga'),
-      aos : envOr('ALFRESCO_AOS_VERSION', '1.1.6'),
-      vtiBin : envOr('ALFRESCO_VTI_BIN_VERSION', '1.1.5'),
       mmt : envOr('ALFRESCO_MMT_VERSION', '6.0'),
-      root : envOr('ALFRESCO_ROOT_VERSION', '6.0'),
-      shareServices : envOr('ALFRESCO_SHARE_SERVICES_VERSION', '6.0'),
-      apiExplorer : envOr('ALFRESCO_API_EXPLORER_VERSION', '6.0.7-ga')
+      share : envOr('ALFRESCO_SHARE_VERSION', '6.0.c')
    };
    
    alfrescoArtifacts = {
       mmtJar : parseArtifactCoordinates('org.alfresco:alfresco-mmt:jar:' + alfrescoVersions.mmt),
-      shareServicesAmp : parseArtifactCoordinates('org.alfresco:alfresco-share-services:amp:' + alfrescoVersions.shareServices),
-      aosAmp : parseArtifactCoordinates('org.alfresco.aos-module:alfresco-aos-module:amp:' + alfrescoVersions.aos),
-      vtiBinWar : parseArtifactCoordinates('org.alfresco.aos-module:alfresco-vti-bin:war:' + alfrescoVersions.vtiBin),
-      platformWar : parseArtifactCoordinates(envOr('ALFRESCO_PLATFORM_WAR_ARTIFACT', 'org.alfresco:content-services-community:war:' + alfrescoVersions.platform)),
-      platformRootWar : parseArtifactCoordinates(envOr('ALFRESCO_PLATFORM_ROOT_WAR_ARTIFACT', 'org.alfresco:alfresco-server-root:war:' + alfrescoVersions.root)),
-      apiExplorerWar : parseArtifactCoordinates('org.alfresco:api-explorer:war:' + alfrescoVersions.apiExplorer)
+      shareWar : parseArtifactCoordinates(envOr('SHARE_WAR_ARTIFACT', 'org.alfresco:share:war:' + alfrescoVersions.share))
    };
    
    repositories = parseRepositories(envOr('MAVEN_ACTIVE_REPOSITORIES', 'alfresco,alfresco_ee,central'));
    artifacts = parseArtifacts(envOr('MAVEN_REQUIRED_ARTIFACTS', ''));
    
-   requiredAlfrescoArtifacts = [alfrescoArtifacts.mmtJar, alfrescoArtifacts.platformRootWar, alfrescoArtifacts.platformWar];
-   if ($ENV['INSTALL_AOS'] === 'true')
-   {
-      requiredAlfrescoArtifacts.push(alfrescoArtifacts.aosAmp);
-      requiredAlfrescoArtifacts.push(alfrescoArtifacts.vtiBinWar);
-   }
-
-   if ($ENV['INSTALL_SHARE_SERVICES'] === 'true')
-   {
-      requiredAlfrescoArtifacts.push(alfrescoArtifacts.shareServicesAmp);
-   }
-   
-   if ($ENV['INSTALL_API_EXPLORER'] === 'true')
-   {
-       requiredAlfrescoArtifacts.push(alfrescoArtifacts.apiExplorerWar);
-   }
+   requiredAlfrescoArtifacts = [alfrescoArtifacts.mmtJar, alfrescoArtifacts.shareWar];
    
    downloadArtifacts(requiredAlfrescoArtifacts, repositories);
    downloadArtifacts(artifacts, repositories);
    
-   artifactsToInstall = [];
-   if ($ENV['INSTALL_AOS'] === 'true')
-   {
-      artifactsToInstall.push(alfrescoArtifacts.aosAmp);
-   }
-   if ($ENV['INSTALL_SHARE_SERVICES'] === 'true')
-   {
-      artifactsToInstall.push(alfrescoArtifacts.shareServicesAmp);
-   }
-   artifactsToInstall = artifactsToInstall.concat(artifacts);
-   installArtifacts(alfrescoArtifacts.platformWar, alfrescoArtifacts.mmtJar, artifactsToInstall);
+   installArtifacts(alfrescoArtifacts.shareWar, alfrescoArtifacts.mmtJar, artifacts);
    
-   if (alfrescoArtifacts.platformWar.downloadedArtifactFile.name !== 'alfresco.war')
+   if (alfrescoArtifacts.shareWar.downloadedArtifactFile.name !== 'share.war')
    {
-      alfrescoArtifacts.platformWar.downloadedArtifactFile.renameTo(new java.io.File(alfrescoArtifacts.platformWar.downloadedArtifactFile.parent, 'alfresco.war'));
-   }
-   
-   if (alfrescoArtifacts.platformRootWar.downloadedArtifactFile.name !== 'ROOT.war')
-   {
-      alfrescoArtifacts.platformRootWar.downloadedArtifactFile.renameTo(new java.io.File(alfrescoArtifacts.platformRootWar.downloadedArtifactFile.parent, 'ROOT.war'));
-   }
-   
-   if (alfrescoArtifacts.vtiBinWar.downloadedArtifactFile !== null && alfrescoArtifacts.vtiBinWar.downloadedArtifactFile.name !== '_vti_bin.war')
-   {
-      alfrescoArtifacts.vtiBinWar.downloadedArtifactFile.renameTo(new java.io.File(alfrescoArtifacts.vtiBinWar.downloadedArtifactFile.parent, '_vti_bin.war'));
-   }
-
-   if (alfrescoArtifacts.apiExplorerWar.downloadedArtifactFile !== null && alfrescoArtifacts.apiExplorerWar.downloadedArtifactFile.name !== 'api-explorer.war')
-   {
-      alfrescoArtifacts.apiExplorerWar.downloadedArtifactFile.renameTo(new java.io.File(alfrescoArtifacts.apiExplorerWar.downloadedArtifactFile.parent, 'api-explorer.war'));
+      alfrescoArtifacts.shareWar.downloadedArtifactFile.renameTo(new java.io.File(alfrescoArtifacts.shareWar.downloadedArtifactFile.parent, 'share.war'));
    }
 
    alfrescoArtifacts.mmtJar.downloadedArtifactFile.delete();

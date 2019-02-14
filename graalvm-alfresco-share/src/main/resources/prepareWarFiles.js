@@ -387,7 +387,7 @@ function installArtifacts(platformWar, mmtJar, artifactsToInstall)
 {
    artifactsToInstall.forEach(function (artifact)
    {
-      var cmdLine, process, uri, zipFs;
+      var cmdLine, processBuilder, process, uri, zipFs;
       if (artifact.packaging === 'amp' || artifact.downloadedArtifactFile.name.endsWith('.amp'))
       {
          cmdLine = '';
@@ -396,7 +396,9 @@ function installArtifacts(platformWar, mmtJar, artifactsToInstall)
             cmdLine = 'cmd /c ';
          }
          cmdLine += 'java -jar ' + mmtJar.downloadedArtifactFile.canonicalPath + ' install ' + artifact.downloadedArtifactFile.canonicalPath + ' ' + platformWar.downloadedArtifactFile.canonicalPath;
-         process = java.lang.Runtime.getRuntime().exec(cmdLine);
+         processBuilder = new java.lang.ProcessBuilder(cmdLine.split(/\s/));
+         processBuilder.inheritIO();
+         process = processBuilder.start();
          
          if (process.waitFor() !== 0)
          {
@@ -412,7 +414,7 @@ function main()
    
    alfrescoVersions = {
       mmt : envOr('ALFRESCO_MMT_VERSION', '6.0'),
-      share : envOr('ALFRESCO_SHARE_VERSION', '6.0')
+      share : envOr('ALFRESCO_SHARE_VERSION', '6.0.c')
    };
    
    alfrescoArtifacts = {

@@ -1,4 +1,4 @@
-FROM ${docker.from.id}:${docker.from.version.majorVersion}.${docker.from.version.minorVersion}.${docker.from.version.incrementalVersion}
+FROM ${docker.from.id}:${docker.from.version}
 
 # Add local transformation tooling
 RUN install_clean \

@@ -1,4 +1,4 @@
-FROM ${docker.from.id}:${docker.from.version.majorVersion}.${docker.from.version.minorVersion}.${docker.from.version.incrementalVersion}
+FROM ${docker.from.id}:${docker.from.version}
 
 # add prepared files that would be too awkward to handle via RUN / sed
 COPY initSolr4.sh solr4-logrotate.d solr4-ng.conf prepareSolr4Files.js /tmp/

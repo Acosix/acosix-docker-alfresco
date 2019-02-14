@@ -1,4 +1,4 @@
-FROM ${docker.from.id}:${docker.from.version.majorVersion}.${docker.from.version.minorVersion}.${docker.from.version.incrementalVersion}
+FROM ${docker.from.id}:${docker.from.version}
 
 # add prepared files that would be too awkward to handle via RUN / sed
 COPY share-config-custom.xml share.xml share-logrotate.d initShare.sh prepareWarFiles.js share-ng.conf /tmp/

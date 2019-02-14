@@ -1,4 +1,4 @@
-FROM ${docker.from.id}:${docker.from.version.majorVersion}.${docker.from.version.minorVersion}.${docker.from.version.incrementalVersion}
+FROM ${docker.from.id}:${docker.from.version}
 
 # add prepared files that would be too awkward to handle via RUN / sed
 COPY downloadASS.js initASS.sh startASS.sh ASS-logrotate.d ass-ng.conf /tmp/
