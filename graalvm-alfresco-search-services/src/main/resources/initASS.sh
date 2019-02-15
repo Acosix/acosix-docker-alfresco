@@ -38,6 +38,7 @@ then
    sed -i '/-remove_old_solr_logs/d' /var/lib/alfresco-search-services/solr/bin/solr
    sed -i '/-archive_gc_logs/d' /var/lib/alfresco-search-services/solr/bin/solr
    sed -i '/-archive_console_logs/d' /var/lib/alfresco-search-services/solr/bin/solr
+   sed -i '/-rotate_solr_logs/ a echo "Removed log rotation handling"' /var/lib/alfresco-search-services/solr/bin/solr
    sed -i '/-rotate_solr_logs/d' /var/lib/alfresco-search-services/solr/bin/solr
    sed -i '/set that as the rmi server hostname/,/fi/ s/SOLR_HOST/JMX_HOST/' /var/lib/alfresco-search-services/solr/bin/solr
    sed -i 's/rootLogger=WARN, file, CONSOLE/rootLogger=WARN, file/' /var/lib/alfresco-search-services/logs/log4j.properties
