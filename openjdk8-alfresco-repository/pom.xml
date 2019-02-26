@@ -13,8 +13,6 @@
     <properties>
         <docker.from.name>baseimage-openjdk8-tomcat8</docker.from.name>
         <docker.from.version>1.0.0-SNAPSHOT</docker.from.version>
-
-        <imagemagick.version>7.0.8-27</imagemagick.version>
     </properties>
 
     <dependencies>

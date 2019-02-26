@@ -13,21 +13,11 @@ RUN install_clean \
     libfile-stripnondeterminism-perl \
     m4 \
     po-debconf \
-    libclang1-3.6 \
+    libclang1-7 \
     libsigsegv2 \
     doxygen \
-#    cm-super-minimal \
-#    doxygen-latex \
     libbz2-1.0 \
     libbz2-dev \
-#    libcairo-script-interpreter2 \
-#    libcairo2-dev \
-#    graphviz \
-#    libcdt5 \
-#    libcgraph6 \
-#    libgvc6 \
-#    libgvpr2 \
-#    libpathplan4 \
     libdjvulibre21 \
     libdjvulibre-dev \
     libexif12 \    
@@ -45,86 +35,30 @@ RUN install_clean \
     libharfbuzz0b \
     libharfbuzz-dev \
     libharfbuzz-gobject0 \
-#    libice-dev \
-    libjasper1 \
-    libjasper-dev \
     libjbig0 \
     libjbig-dev \
     libjpeg8 \
-    libjpeg-dev \
-#    libjpeg-turbo8-dev \
     libjpeg8-dev \
-#    libjs-jquery \
     liblcms2-2 \
     liblcms2-dev \
-#    libllvm3.6v5 \
     liblqr-1-0 \
     liblqr-1-0-dev \
     liblzma5 \
     liblzma-dev \
     libobjc4 \
     libobjc-5-dev \
-#    libilmbase-dev \
-#    libopenexr-dev \
-#    libpango1.0-dev \
-#    libpcre3-dev \
-#    libpcre32-3 \
-#    libpcrecpp0v5 \
-#    libperl-dev \
-#    libpixman-1-dev \
-    libpng12-0 \
-    libpng12-dev \
+    libpng16-16 \
+    libpng-dev \
     libpotrace0 \
-#    libptexenc1 \
     libpthread-stubs0-dev \
-#    gir1.2-rsvg-2.0 \
-#    librsvg2-bin \
-#    librsvg2-dev \
-#    libsm-dev \
-#    libsynctex1 \
-#    libtexlua52 \
-#    libtexluajit2 \
     libtiffxx5 \
     libtiff5-dev \
     libwmf-bin \
     libwmf-dev \
-#    libx11-dev \
-#    libxau-dev \
-#    libxcb-render0-dev \
-#    libxcb-shm0-dev \
-#    libxcb1-dev \
-#    libxdmcp-dev \
-#    libxext-dev \
-#    libxft-dev \
-#    libxml2-dev \
-#    libxml2-utils \
-#    libxrender-dev \
-#    libxt-dev \
     libzzip-0-13 \
     libzzip-dev \
-#    pkg-kde-tools \
-#    preview-latex-style \
-#    tex-common \
-#    texlive-base \
-#    texlive-binaries \
-#    texlive-extra-utils \
-#    texlive-font-utils \
-#    texlive-fonts-recommended \
-#    texlive-latex-base \
-#    texlive-latex-extra \
-#    texlive-latex-recommended \
-#    texlive-pictures \
-#    x11proto-core-dev \
-#    x11proto-input-dev \
-#    x11proto-kb-dev \
-#    x11proto-render-dev \
-#    x11proto-xext-dev \
-#    xorg-sgml-doctools \
-#    xsltproc \
-#    xtrans-dev \
     zlib1g \
     zlib1g-dev \
-#    xorg-dev \
     libopenjp2-7 \
     libopenjp2-7-dev \
   && wget -O /tmp/ImageMagick.tar.gz https://www.imagemagick.org/download/ImageMagick-${imagemagick.version}.tar.gz \
@@ -158,22 +92,20 @@ RUN install_clean \
     libgdk-pixbuf2.0-dev \
     libglib2.0-dev \
     libharfbuzz-dev \
-    libjasper-dev \
     libjbig-dev \
-    libjpeg-dev \
     libjpeg8-dev \
     liblcms2-dev \
     liblqr-1-0-dev \
     liblzma-dev \
     libobjc-5-dev \
-    libpng12-dev \
+    libpng-dev \
     libtiff5-dev \
     libwmf-dev \
     zlib1g-dev \
     libzzip-dev \
     libopenjp2-7-dev
 
-RUN wget -O /tmp/wkhtmltox.deb https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.xenial_amd64.deb \
+RUN wget -O /tmp/wkhtmltox.deb https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb \
    && install_clean \
      fontconfig \
      xfonts-75dpi \
