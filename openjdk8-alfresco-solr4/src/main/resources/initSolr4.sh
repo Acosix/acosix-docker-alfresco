@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 ENABLED_CORES=${ENABLED_CORES:=alfresco,archive}
 

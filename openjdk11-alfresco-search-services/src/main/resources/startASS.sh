@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 REPOSITORY_HOST=${REPOSITORY_HOST:=localhost}
 REPOSITORY_PORT=${REPOSITORY_PORT:=80}

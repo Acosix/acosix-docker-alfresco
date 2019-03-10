@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 DB_USER=${DB_USER:=alfresco}
 DB_PW=${DB_PW:=alfresco}
@@ -18,6 +18,13 @@ ENABLE_SSL_PROXY=${ENABLE_SSL_PROXY:=false}
 PROXY_NAME=${PROXY_NAME:=localhost}
 PROXY_PORT=${PROXY_PORT:=80}
 PROXY_SSL_PORT=${PROXY_SSL_PORT:=443}
+LOCAL_PORT=${LOCAL_PORT:-8080}
+LOCAL_SSL_PORT=${LOCAL_SSL_PORT:-8081}
+
+# _RAW are for HTTP(S) access directly to Tomcat without reverse proxy, only using Docker NAT
+PROXY_NAME_RAW=${PROXY_NAME_RAW:-$PROXY_NAME}
+PROXY_PORT_RAW=${PROXY_PORT_RAW:=8082}
+PROXY_SSL_PORT_RAW=${PROXY_SSL_PORT_RAW:=8083}
 
 ENABLE_SHARE_SSL_PROXY=${ENABLE_SHARE_SSL_PROXY:=false}
 SHARE_PROXY_NAME=${SHARE_PROXY_NAME:=localhost}
@@ -29,11 +36,6 @@ SOLR_HOST=${SOLR_HOST:=localhost}
 SOLR_PORT=${SOLR_PORT:=80}
 SOLR_SSL_PORT=${SOLR_SSL_PORT:=443}
 ACCESS_SOLR_VIA_SSL=${ACCESS_SOLR_VIA_SSL:=false}
-
-PROXY_NAME=${PROXY_NAME:=localhost}
-PROXY_NAME_RAW=${PROXY_NAME_RAW:-$PROXY_NAME}
-PROXY_PORT_RAW=${PROXY_PORT_RAW:=8082}
-PROXY_SSL_PORT_RAW=${PROXY_SSL_PORT_RAW:=8083}
 
 REQUIRED_ARTIFACTS=${MAVEN_REQUIRED_ARTIFACTS:=''}
 PLATFORM_VERSION=${ALFRESCO_PLATFORM_VERSION:=5.2.g}
@@ -163,6 +165,16 @@ then
 
    sed -i "s/%PROXY_NAME%/${PROXY_NAME}/g" /srv/alfresco/config/alfresco-global.properties
    sed -i "s/%SHARE_PROXY_NAME%/${SHARE_PROXY_NAME}/g" /srv/alfresco/config/alfresco-global.properties
+
+   PUBLIC_REPO_HOST_PATTERN=`echo $PROXY_NAME | sed -e "s/\./\\\./g"`
+   sed -i "s/%PUBLIC_REPO_HOST_PATTERN%/${PUBLIC_REPO_HOST_PATTERN}/g" /srv/alfresco/config/alfresco-global.properties
+   if [[ $PROXY_PORT != 80 || $PROXY_SSL_PORT != 443 ]]
+   then
+      sed -i "s/%PUBLIC_REPO_PORT_PATTERN%/(:(${PROXY_PORT}|${PROXY_SSL_PORT}))?/g" /srv/alfresco/config/alfresco-global.properties
+   else
+      sed -i "s/%PUBLIC_REPO_PORT_PATTERN%//g" /srv/alfresco/config/alfresco-global.properties
+   fi
+   sed -i "s/%LOCAL_PORT_PATTERN%/(:(${LOCAL_PORT}|${LOCAL_SSL_PORT}))?/g" /srv/alfresco/config/alfresco-global.properties
 
    echo "Prcessing environment variables for alfresco-global.properties and dev-log4j.properties" > /proc/1/fd/1
    CUSTOM_APPENDER_LIST='';
