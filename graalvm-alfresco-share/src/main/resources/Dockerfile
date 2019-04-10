@@ -26,8 +26,7 @@ ENV MAVEN_REQUIRED_ARTIFACTS= \
 
 EXPOSE 8080 8081 5002
 
-# we also support /srv/alfresco/defaultArtifacts but don't want to force a volume to be auto-created if not bound
-VOLUME ["/srv/alfresco/keystore"]
+# we support /srv/alfresco/keystore and /srv/alfresco/defaultArtifacts but don't want to force a volume to be auto-created if not bound
 
 LABEL vendor="${docker.labels.vendor}" \
    ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \

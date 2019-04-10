@@ -30,8 +30,16 @@ then
       jjs -scripting /srv/alfresco-search-services/downloadASS.js -- /tmp
    fi
 
-   unzip -qq "/tmp/alfresco-search-services-*.zip" -d /var/lib/
+   if [[ -z "$(ls -A /tmp/alfresco-search-services-*.zip)" ]]
+   then
+      echo >&2 "No Alfresco Search Services ZIP is available for setup"
+      exit 1
+   fi
 
+   unzip -qq "/tmp/alfresco-search-services-*.zip" -d /var/lib/
+   rm -rf /tmp/alfresco-search-services-*.zip
+
+   echo "Updating start script(s)" > /proc/1/fd/1
    sed -i 's/^#SOLR_HOME=/SOLR_HOME=\/srv\/alfresco-search-services\/solrhome/' /var/lib/alfresco-search-services/solr.in.sh
    sed -i 's/^SOLR_LOGS_DIR=.*/SOLR_LOGS_DIR=\/var\/log\/alfresco-search-services/' /var/lib/alfresco-search-services/solr.in.sh
    sed -i 's/^LOG4J_PROPS=.*/LOG4J_PROPS=\/var\/lib\/alfresco-search-services\/logs\/log4j.properties/' /var/lib/alfresco-search-services/solr.in.sh
@@ -41,11 +49,15 @@ then
    sed -i '/-rotate_solr_logs/ a echo "Removed log rotation handling"' /var/lib/alfresco-search-services/solr/bin/solr
    sed -i '/-rotate_solr_logs/d' /var/lib/alfresco-search-services/solr/bin/solr
    sed -i '/set that as the rmi server hostname/,/fi/ s/SOLR_HOST/JMX_HOST/' /var/lib/alfresco-search-services/solr/bin/solr
+
+   echo "Updating log configuration" > /proc/1/fd/1
    sed -i 's/rootLogger=WARN, file, CONSOLE/rootLogger=WARN, file/' /var/lib/alfresco-search-services/logs/log4j.properties
    sed -i 's/\.RollingFileAppender$/.DailyRollingFileAppender/' /var/lib/alfresco-search-services/logs/log4j.properties
    sed -i 's/MaxFileSize=4MB$/DatePattern='.'yyyy-MM-dd/' /var/lib/alfresco-search-services/logs/log4j.properties
    sed -i 's/MaxBackupIndex=9$/Append=true/' /var/lib/alfresco-search-services/logs/log4j.properties
    sed -i 's/yyyy-MM-dd HH:mm:ss.SSS/ISO8601/' /var/lib/alfresco-search-services/logs/log4j.properties
+
+   echo "Preparing home, content store, log directories" > /proc/1/fd/1
    mkdir -p /srv/alfresco-search-services/solrhome /srv/alfresco-search-services/contentstore /var/log/alfresco-search-services
    mv /var/lib/alfresco-search-services/solrhome/* /srv/alfresco-search-services/solrhome/
    rm -rf /var/lib/alfresco-search-services/solr/docs /var/lib/alfresco-search-services/solrhome
@@ -57,11 +69,13 @@ fi
 
 if [ ! -f '/var/lib/alfresco-search-services/.assInitDone' ]
 then
+   echo "Initialising shared.properties" > /proc/1/fd/1
    sed -i 's/solr\.host=localhost/solr.host=%PUBLIC_SOLR_HOST%/' /srv/alfresco-search-services/solrhome/conf/shared.properties
    sed -i 's/#solr\.port=8983/solr.port=%PUBLIC_SOLR_PORT%/' /srv/alfresco-search-services/solrhome/conf/shared.properties
    sed -i "s/%PUBLIC_SOLR_HOST%/${SOLR_HOST}/g" /srv/alfresco-search-services/solrhome/conf/shared.properties
    sed -i "s/%PUBLIC_SOLR_PORT%/${SOLR_PORT}/g" /srv/alfresco-search-services/solrhome/conf/shared.properties
 
+   echo "Processing environment variables for logging and start script(s)" > /proc/1/fd/1
    CUSTOM_APPENDER_LIST=''
 
    # otherwise for will also cut on whitespace
@@ -69,11 +83,13 @@ then
    for i in `env`
    do
       value=`echo "$i" | cut -d '=' -f 2-`
+
       if [[ $i == LOG4J-APPENDER_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          appenderName=`echo $key | cut -d '.' -f 1`
+
          if grep --quiet "^${key}=" /var/lib/alfresco-search-services/logs/log4j.properties; then
             # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
             value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
@@ -86,10 +102,12 @@ then
          then
             CUSTOM_APPENDER_LIST="${CUSTOM_APPENDER_LIST},${appenderName}"
          fi
+
       elif [[ $i == LOG4J-LOGGER_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
+
          if grep --quiet "^${key}=" /var/lib/alfresco-search-services/logs/log4j.properties; then
             # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
             value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
@@ -97,10 +115,12 @@ then
          else
             echo "log4j.logger.${key}=${value}" >> /var/lib/alfresco-search-services/logs/log4j.properties
          fi
+
       elif [[ $i == LOG4J-ADDITIVITY_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
+
          if grep --quiet "^${key}=" /var/lib/alfresco-search-services/logs/log4j.properties; then
             # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
             value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
@@ -108,17 +128,21 @@ then
          else
             echo "log4j.additivity.${key}=${value}" >> /var/lib/alfresco-search-services/logs/log4j.properties
          fi
+
       elif [[ ! -z $value ]]
       then
          # we only handle properties already defined in solr.in.sh - otherwise we'd end up adding arbitrary config not meant for SOLR
          key=`echo "$i" | cut -d '=' -f 1`
-         DEF_COUNT=$(grep "$key=" /var/lib/alfresco-search-services/solr.in.sh | wc -l)
+         # need to suppress error code of grep if case of 0 matches
+         DEF_COUNT=`grep "$key=" /var/lib/alfresco-search-services/solr.in.sh | wc -l || :`
+
          if [[ DEF_COUNT -eq 1 ]]
          then
             echo "Processing environment variable $i" > /proc/1/fd/1
             # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
             value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
             sed -i "s/^\s*#?\s*$key=.*/$key=$value/" /var/lib/alfresco-search-services/solr.in.sh
+
          elif [[ ! DEF_COUNT -eq 0 ]]
          then
             echo "Processing environment variable $i" > /proc/1/fd/1
@@ -128,12 +152,13 @@ then
    done
    sed -i "s/rootLogger=WARN, file/rootLogger=WARN, file, ${CUSTOM_APPENDER_LIST}/" /var/lib/alfresco-search-services/logs/log4j.properties
 
+   echo "Initialising SOLR core configurations" > /proc/1/fd/1
    NEW_CORE_LIST=''
    for core in "${CORE_LIST[@]}"
    do
       if [[ ! -d "/srv/alfresco-search-services/coreConfigs/${core}" || ! -f "/srv/alfresco-search-services/coreConfigs/${core}/core.properties" ]]
       then
-         echo "Setting up Alfresco Search Services core ${core}" > /proc/1/fd/1
+         echo "Setting up SOLR core ${core}" > /proc/1/fd/1
          cp -r /srv/alfresco-search-services/solrhome/templates/rerank "/srv/alfresco-search-services/coreConfigs/${core}"
          echo "name=${core}" >> "/srv/alfresco-search-services/coreConfigs/${core}/core.properties"
          ln -s "/srv/alfresco-search-services/coreConfigs/${core}" "/srv/alfresco-search-services/solrhome/${core}"
@@ -171,6 +196,7 @@ then
       fi
    done
 
+   echo "Processing environment variables for SOLR core configuration" > /proc/1/fd/1
    for i in `env`
    do
       if [[ $i == CORE_* ]]
@@ -193,12 +219,13 @@ then
                echo "${valueKey}=${value}" >> "/srv/alfresco-search-services/solrhome/${coreName}/conf/solrcore.properties"
             fi
          fi
-      fi
-      if [[ $i == SHARED_* ]]
+
+      elif [[ $i == SHARED_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          value=`echo "$i" | cut -d '=' -f 2-`
+
          if grep --quiet "^${key}=" "/srv/alfresco-search-services/solrhome/conf/shared.properties"
          then
             # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)

@@ -2,6 +2,24 @@
 
 set -euo pipefail
 
+file_env() {
+    local var="$1"
+    local fileVar="${var}_FILE"
+    local def="${2:-}"
+    if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+        echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
+        exit 1
+    fi
+    local val="$def"
+    if [ "${!var:-}" ]; then
+        val="${!var}"
+    elif [ "${!fileVar:-}" ]; then
+        val="$(< "${!fileVar}")"
+    fi
+    unset "$fileVar"
+    echo "$val"
+}
+
 DB_USER=${DB_USER:=alfresco}
 DB_PW=${DB_PW:=alfresco}
 DB_NAME=${DB_NAME:=alfresco}
@@ -42,6 +60,8 @@ PLATFORM_VERSION=${ALFRESCO_PLATFORM_VERSION:=5.2.g}
 LEGACY_SUPPORT_TOOLS_INSTALLED=${ALFRESCO_SUPPORT_TOOLS_INSTALLED:=false}
 
 INIT_KEYSTORE_FROM_DEFAULT=${INIT_KEYSTORE_FROM_DEFAULT:=true}
+
+ALFRESCO_ADMIN_PASSWORD=$(file_env ALFRESCO_ADMIN_PASSWORD admin)
 
 if [ ! -f '/var/lib/tomcat8/.alfrescoInitDone' ]
 then
@@ -133,6 +153,9 @@ then
    sed -i "s/%DB_USER%/${DB_USER}/g" /srv/alfresco/config/alfresco-global.properties
    sed -i "s/%DB_PW%/${DB_PW}/g" /srv/alfresco/config/alfresco-global.properties
 
+   ALFRESCO_ADMIN_PASSWORD=`printf '%s' "$ALFRESCO_ADMIN_PASSWORD" | iconv -t utf16le | openssl md4`
+   sed -i "s/%ADMIN_PW%/${ALFRESCO_ADMIN_PASSWORD}/g" /srv/alfresco/config/alfresco-global.properties
+
    sed -i "s/%SEARCH_SUBSYSTEM%/${SEARCH_SUBSYSTEM}/g" /srv/alfresco/config/alfresco-global.properties
    sed -i "s/%SOLR_HOST%/${SOLR_HOST}/g" /srv/alfresco/config/alfresco-global.properties
    sed -i "s/%SOLR_PORT%/${SOLR_PORT}/g" /srv/alfresco/config/alfresco-global.properties
@@ -176,18 +199,19 @@ then
    fi
    sed -i "s/%LOCAL_PORT_PATTERN%/(:(${LOCAL_PORT}|${LOCAL_SSL_PORT}))?/g" /srv/alfresco/config/alfresco-global.properties
 
-   echo "Prcessing environment variables for alfresco-global.properties and dev-log4j.properties" > /proc/1/fd/1
+   echo "Processing environment variables for alfresco-global.properties and dev-log4j.properties" > /proc/1/fd/1
    CUSTOM_APPENDER_LIST='';
 
    # otherwise for will also cut on whitespace
    IFS=$'\n'
    for i in `env`
    do
+      value=`echo "$i" | cut -d '=' -f 2-`
+
       if [[ $i == GLOBAL_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         value=`echo "$i" | cut -d '=' -f 2-`
 
          if grep --quiet "^${key}=" /srv/alfresco/config/alfresco-global.properties; then
             # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
@@ -201,14 +225,13 @@ then
          then
             sed -i "s/#useCustomSchema#//g" /srv/alfresco/config/alfresco-global.properties
          fi
-      fi
 
-      if [[ $i == LOG4J-APPENDER_* ]]
+      elif [[ $i == LOG4J-APPENDER_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          appenderName=`echo $key | cut -d '.' -f 1`
-         value=`echo "$i" | cut -d '=' -f 2-`
+
          if grep --quiet "^${key}=" /srv/alfresco/config/alfresco/extension/dev-log4j.properties; then
             # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
             value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
@@ -221,13 +244,12 @@ then
          then
             CUSTOM_APPENDER_LIST="${CUSTOM_APPENDER_LIST},${appenderName}"
          fi
-      fi
 
-      if [[ $i == LOG4J-LOGGER_* ]]
+      elif [[ $i == LOG4J-LOGGER_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         value=`echo "$i" | cut -d '=' -f 2-`
+
          if grep --quiet "^${key}=" /srv/alfresco/config/alfresco/extension/dev-log4j.properties; then
             # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
             value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
@@ -235,13 +257,12 @@ then
          else
             echo "log4j.logger.${key}=${value}" >> /srv/alfresco/config/alfresco/extension/dev-log4j.properties
          fi
-      fi
 
-      if [[ $i == LOG4J-ADDITIVITY_* ]]
+      elif [[ $i == LOG4J-ADDITIVITY_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         value=`echo "$i" | cut -d '=' -f 2-`
+
          if grep --quiet "^${key}=" /srv/alfresco/config/alfresco/extension/dev-log4j.properties; then
             # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
             value=`echo "$value" | sed -r 's/\\//\\\\\//g'`

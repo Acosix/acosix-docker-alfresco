@@ -149,8 +149,8 @@ RUN mkdir -p /srv/alfresco/config /srv/alfresco/modules /etc/tomcat8/Catalina/lo
 # Various protocol ports: 10025 (inboundSMTP) / 10445,10137-10139 (CIFS/SMB) / 10021 FTP (active) / 11000-11099 FTP (passive)
 EXPOSE 8080 8081 8082 8083 5001 10445 10137-10139 10025 10021 11000-11099
 
-# we also support /srv/alfresco/defaultArtifacts but don't want to force a volume to be auto-created if not bound
-VOLUME ["/srv/alfresco/data", "/srv/alfresco/keystore"]
+# we also support /srv/alfresco/keystore and /srv/alfresco/defaultArtifacts but don't want to force a volume to be auto-created if not bound
+VOLUME ["/srv/alfresco/data"]
 
 ENV MAVEN_REQUIRED_ARTIFACTS= \
    ALFRESCO_PLATFORM_VERSION=6.0.7-ga \
