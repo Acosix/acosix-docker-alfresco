@@ -153,7 +153,7 @@ then
    sed -i "s/%DB_USER%/${DB_USER}/g" /srv/alfresco/config/alfresco-global.properties
    sed -i "s/%DB_PW%/${DB_PW}/g" /srv/alfresco/config/alfresco-global.properties
 
-   ALFRESCO_ADMIN_PASSWORD=`printf '%s' "$ALFRESCO_ADMIN_PASSWORD" | iconv -t utf16le | openssl md4`
+   ALFRESCO_ADMIN_PASSWORD=`printf '%s' "$ALFRESCO_ADMIN_PASSWORD" | iconv -t utf16le | openssl md4 | cut -d' ' -f2`
    sed -i "s/%ADMIN_PW%/${ALFRESCO_ADMIN_PASSWORD}/g" /srv/alfresco/config/alfresco-global.properties
 
    sed -i "s/%SEARCH_SUBSYSTEM%/${SEARCH_SUBSYSTEM}/g" /srv/alfresco/config/alfresco-global.properties
