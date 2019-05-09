@@ -21,7 +21,7 @@ file_env() {
 }
 
 DB_USER=${DB_USER:=alfresco}
-DB_PW=${DB_PW:=alfresco}
+DB_PW=$(file_env DB_PW alfresco)
 DB_NAME=${DB_NAME:=alfresco}
 DB_HOST=${DB_HOST:=localhost}
 DB_PORT=${DB_PORT:=-1}
@@ -153,7 +153,7 @@ then
    sed -i "s/%DB_USER%/${DB_USER}/g" /srv/alfresco/config/alfresco-global.properties
    sed -i "s/%DB_PW%/${DB_PW}/g" /srv/alfresco/config/alfresco-global.properties
 
-   ALFRESCO_ADMIN_PASSWORD=`printf '%s' "$ALFRESCO_ADMIN_PASSWORD" | iconv -t utf16le | openssl md4 | cut -d' ' -f2`
+   ALFRESCO_ADMIN_PASSWORD=`printf '%s' "$ALFRESCO_ADMIN_PASSWORD" | iconv -t utf16le | openssl md4 | cut -d ' ' -f 2-`
    sed -i "s/%ADMIN_PW%/${ALFRESCO_ADMIN_PASSWORD}/g" /srv/alfresco/config/alfresco-global.properties
 
    sed -i "s/%SEARCH_SUBSYSTEM%/${SEARCH_SUBSYSTEM}/g" /srv/alfresco/config/alfresco-global.properties
