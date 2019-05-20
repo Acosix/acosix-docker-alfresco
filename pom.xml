@@ -16,7 +16,7 @@
     <properties>
         <docker.labels.namespace>de.acosix.docker.alfresco</docker.labels.namespace>
 
-        <imagemagick.version>7.0.8-44</imagemagick.version>
+        <imagemagick.version>7.0.8-45</imagemagick.version>
     </properties>
 
     <modules>
