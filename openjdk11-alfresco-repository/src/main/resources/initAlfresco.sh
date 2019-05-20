@@ -3,21 +3,38 @@
 set -euo pipefail
 
 file_env() {
-    local var="$1"
-    local fileVar="${var}_FILE"
-    local def="${2:-}"
-    if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
-        echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
-        exit 1
-    fi
-    local val="$def"
-    if [ "${!var:-}" ]; then
-        val="${!var}"
-    elif [ "${!fileVar:-}" ]; then
-        val="$(< "${!fileVar}")"
-    fi
-    unset "$fileVar"
-    echo "$val"
+   local var="$1"
+   local fileVar="${var}_FILE"
+   local def="${2:-}"
+   if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+      echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
+      exit 1
+   fi
+   local val="$def"
+   if [ "${!var:-}" ]; then
+      val="${!var}"
+   elif [ "${!fileVar:-}" ]; then
+      val="$(< "${!fileVar}")"
+   fi
+   unset "$fileVar"
+   echo "$val"
+}
+
+setInPropertiesFile() {
+   local file="$1"
+   local key="$2"
+   local value="$3"
+
+   # escape typical special characters in key / value (. and / for dot-separated keys or path values)
+   regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
+   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g'`
+   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+
+   if grep --quiet "^#?${regexSafeKey}=" ${file}; then
+      sed -i "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${file}
+   else
+      echo "${key}=${value}" >> ${file}
+   fi
 }
 
 DB_USER=${DB_USER:=alfresco}
@@ -212,14 +229,15 @@ then
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-
-         if grep --quiet "^${key}=" /srv/alfresco/config/alfresco-global.properties; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^${key}=.*/${key}=${value}/" /srv/alfresco/config/alfresco-global.properties
-         else
-            echo "${key}=${value}" >> /srv/alfresco/config/alfresco-global.properties
+         
+         # support secrets mounted via files
+         if [[ $key == *-FILE ]]
+         then
+            value="$(< "${value}")"
+            key=`echo "$key" | sed -r 's/-FILE$//'`
          fi
+
+         setInPropertiesFile /srv/alfresco/config/alfresco-global.properties ${key} ${value}
 
          if [[ $key == hibernate.default_schema ]]
          then
@@ -232,13 +250,7 @@ then
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          appenderName=`echo $key | cut -d '.' -f 1`
 
-         if grep --quiet "^${key}=" /srv/alfresco/config/alfresco/extension/dev-log4j.properties; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^log4j\.appender\.${key}=.*/log4j.appender.${key}=${value}/" /srv/alfresco/config/alfresco/extension/dev-log4j.properties
-         else
-            echo "log4j.appender.${key}=${value}" >> /srv/alfresco/config/alfresco/extension/dev-log4j.properties
-         fi
+         setInPropertiesFile /srv/alfresco/config/alfresco/extension/dev-log4j.properties "log4j.appender.${key}" ${value}
 
          if [[ ! $CUSTOM_APPENDER_LIST =~ "^,([^,]+,)*${appenderName}(,[^,$]+)*$" ]]
          then
@@ -250,26 +262,14 @@ then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
 
-         if grep --quiet "^${key}=" /srv/alfresco/config/alfresco/extension/dev-log4j.properties; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^log4j\.logger\.${key}=.*/log4j.logger.${key}=${value}/" /srv/alfresco/config/alfresco/extension/dev-log4j.properties
-         else
-            echo "log4j.logger.${key}=${value}" >> /srv/alfresco/config/alfresco/extension/dev-log4j.properties
-         fi
+         setInPropertiesFile /srv/alfresco/config/alfresco/extension/dev-log4j.properties "log4j.logger.${key}" ${value}
 
       elif [[ $i == LOG4J-ADDITIVITY_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
 
-         if grep --quiet "^${key}=" /srv/alfresco/config/alfresco/extension/dev-log4j.properties; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^log4j\.additivity\.${key}=.*/log4j.additivity.${key}=${value}/" /srv/alfresco/config/alfresco/extension/dev-log4j.properties
-         else
-            echo "log4j.additivity.${key}=${value}" >> /srv/alfresco/config/alfresco/extension/dev-log4j.properties
-         fi
+         setInPropertiesFile /srv/alfresco/config/alfresco/extension/dev-log4j.properties "log4j.additivity.${key}" ${value}
       fi
    done
    sed -i "s/#customAppenderList#/${CUSTOM_APPENDER_LIST}/" /srv/alfresco/config/alfresco/extension/dev-log4j.properties
