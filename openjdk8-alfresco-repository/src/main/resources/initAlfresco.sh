@@ -21,7 +21,7 @@ file_env() {
 }
 
 setInPropertiesFile() {
-   local file="$1"
+   local fileName="$1"
    local key="$2"
    local value="$3"
 
@@ -30,10 +30,10 @@ setInPropertiesFile() {
    replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g'`
    replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
 
-   if grep --quiet "^#?${regexSafeKey}=" ${file}; then
-      sed -i "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${file}
+   if grep --quiet "^#?${regexSafeKey}=" ${fileName}; then
+      sed -i "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
    else
-      echo "${key}=${value}" >> ${file}
+      echo "${key}=${value}" >> ${fileName}
    fi
 }
 
