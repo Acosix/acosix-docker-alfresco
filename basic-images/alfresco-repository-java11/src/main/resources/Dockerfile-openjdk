@@ -1,0 +1,55 @@
+FROM ${docker.from.id}-openjdk11:${docker.from.version}
+
+# no local transformation tooling (Java 11 only relevant for Alfresco 6.1.2+ which can use remote transformers - though CE 6.1.2 GA requires backport of remote transformer client)
+
+# add prepared files that would be too awkward to handle via RUN / sed
+COPY *.jar alfresco.xml alfresco-logrotate.d initAlfresco.sh prepareWarFiles.js alfresco-ng.conf repository-config /tmp/
+
+# apply our Alfresco Repository default configurations
+RUN mkdir -p /srv/alfresco/config /srv/alfresco/modules /etc/tomcat8/Catalina/localhost \
+   && mv /tmp/*.jar /srv/alfresco/modules/ \
+   && mv /tmp/alfresco-global.properties /srv/alfresco/config/ \
+   && mv /tmp/alfresco /srv/alfresco/config/ \
+   && find /srv/alfresco/config -type d -exec chmod +x '{}' \; \
+   && mv /tmp/alfresco.xml /etc/tomcat8/Catalina/localhost/ \
+   && mv /tmp/alfresco-logrotate.d /etc/logrotate.d/alfresco \
+   && touch /var/lib/tomcat8/logs/.alfresco-logrotate-dummy \
+   && mv /tmp/prepareWarFiles.js /var/lib/tomcat8/ \
+   && chown -R tomcat8:tomcat8 /srv/alfresco \
+   && mv /tmp/alfresco-ng.conf /etc/syslog-ng/conf.d/alfresco-ng.conf \
+   && mv /tmp/initAlfresco.sh /etc/my_init.d/50_initAlfresco.sh \
+   && chmod +x /etc/my_init.d/50_initAlfresco.sh
+
+# Public HTTP ports for reverse-proxy: 8080 / 8081 (assumed secured via SSL)
+# Private HTTP ports for SOLR: 8082 / 8083 (active SSL)
+# JMX / RMI port: 5001 (aligned with SOLR + Share images so that each have a distinct port - it's hard to forward JMX / RMI otherwise due JVM having to know the public port you're exposing via Docker)
+# JDWP port: 8000
+# Various protocol ports: 10025 (inboundSMTP) / 10021 FTP (active) / 11000-11099 FTP (passive)
+EXPOSE 8080 8081 8082 8083 5001 8000 10025 10021 11000-11099
+
+# we also support /srv/alfresco/keystore and /srv/alfresco/defaultArtifacts but don't want to force a volume to be auto-created if not bound
+VOLUME ["/srv/alfresco/data"]
+
+ENV MAVEN_REQUIRED_ARTIFACTS= \
+   ALFRESCO_PLATFORM_VERSION=6.2.0-ga \
+   ALFRESCO_API_EXPLORER_VERSION=6.2.0-ga \
+   ALFRESCO_MMT_VERSION=6.0 \
+   ALFRESCO_ROOT_VERSION=6.0 \
+   ALFRESCO_AOS_VERSION=1.3.0 \
+   ALFRESCO_VTI_BIN_VERSION=1.3.0 \
+   ALFRESCO_SHARE_SERVICES_VERSION=6.2.0 \
+   ALFRESCO_PLATFORM_WAR_ARTIFACT= \
+   ALFRESCO_PLATFORM_ROOT_WAR_ARTIFACT= \
+   MAVEN_ACTIVE_REPOSITORIES=alfresco,alfresco_ee,central,ossrh \
+   MAVEN_REPOSITORIES_central_URL=https://repo1.maven.org/maven2 \
+   MAVEN_REPOSITORIES_alfresco_URL=https://artifacts.alfresco.com/nexus/content/groups/public \
+   MAVEN_REPOSITORIES_alfresco_ee_URL=https://artifacts.alfresco.com/nexus/content/groups/private \
+   MAVEN_REPOSITORIES_ossrh_URL=https://oss.sonatype.org/content/repositories/snapshots \
+   JMX_RMI_PORT=5001
+
+LABEL vendor="${docker.labels.vendor}" \
+   ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \
+   ${docker.labels.namespace}.is-beta="" \
+   ${docker.labels.namespace}.is-production="" \
+   ${docker.labels.namespace}.release-date="${docker.labels.release-date}" \
+   ${docker.labels.namespace}.maintainer="${docker.labels.maintainer}"

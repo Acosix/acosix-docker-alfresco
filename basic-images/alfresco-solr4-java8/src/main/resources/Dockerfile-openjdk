@@ -1,0 +1,40 @@
+FROM ${docker.from.id}-openjdk8:${docker.from.version}
+
+# add prepared files that would be too awkward to handle via RUN / sed
+COPY initSolr4.sh solr4-logrotate.d solr4-ng.conf prepareSolr4Files.js /tmp/
+COPY defaultKeystore /tmp/defaultKeystore/
+
+# apply our SOLR 4 default configurations
+RUN mv /tmp/solr4-logrotate.d /etc/logrotate.d/alfresco-solr4 \
+   && mv /tmp/prepareSolr4Files.js /var/lib/tomcat8/ \
+   && mv /tmp/solr4-ng.conf /etc/syslog-ng/conf.d/solr4-ng.conf \
+   && mv /tmp/initSolr4.sh /etc/my_init.d/50_initSolr4.sh \
+   && chmod +x /etc/my_init.d/50_initSolr4.sh \
+   && mkdir -p /srv/alfresco-solr4/modules \
+   && mv /tmp/defaultKeystore /srv/alfresco-solr4/ \
+   && chmod 600 /srv/alfresco-solr4/defaultKeystore/* \
+   && chown -R tomcat8:tomcat8 /srv/alfresco-solr4/defaultKeystore
+
+ENV MAVEN_REQUIRED_ARTIFACTS= \
+   ALFRESCO_SOLR4_VERSION=6.7 \
+   ALFRESCO_SOLR4_WAR_ARTIFACT= \
+   ALFRESCO_SOLR4_CONFIG_ZIP_ARTIFACT= \
+   MAVEN_ACTIVE_REPOSITORIES=alfresco,alfresco_ee,central,ossrh \
+   MAVEN_REPOSITORIES_central_URL=https://repo1.maven.org/maven2 \
+   MAVEN_REPOSITORIES_alfresco_URL=https://artifacts.alfresco.com/nexus/content/groups/public \
+   MAVEN_REPOSITORIES_alfresco_ee_URL=https://artifacts.alfresco.com/nexus/content/groups/private \
+   MAVEN_REPOSITORIES_ossrh_URL=https://oss.sonatype.org/content/repositories/snapshots \
+   JMX_RMI_PORT=5003
+
+EXPOSE 8080 8081 8082 8083 5003
+
+# having SOLR core configurations in an externalised volume is optional - index is expected to be always externalised
+# we also support /srv/alfresco-solr4/defaultArtifacts but don't want to force a volume to be auto-created if not bound
+VOLUME ["/srv/alfresco-solr4/index", "/srv/alfresco-solr4/coreConfigs", "/srv/alfresco-solr4/keystore"]
+
+LABEL vendor="${docker.labels.vendor}" \
+   ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \
+   ${docker.labels.namespace}.is-beta="" \
+   ${docker.labels.namespace}.is-production="" \
+   ${docker.labels.namespace}.release-date="${docker.labels.release-date}" \
+   ${docker.labels.namespace}.maintainer="${docker.labels.maintainer}"

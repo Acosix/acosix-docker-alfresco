@@ -4,30 +4,22 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>de.acosix.docker.alfresco</groupId>
-        <artifactId>parent</artifactId>
+        <artifactId>acosix-docker-alfresco-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <groupId>de.acosix.docker.alfresco</groupId>
-    <artifactId>basic-images-parent</artifactId>
+    <artifactId>acosix-docker-alfresco-basic-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <properties>
-        <imagemagick.version>7.0.8-45</imagemagick.version>
-    </properties>
-
     <modules>
-        <module>openjdk8-alfresco-repository</module>
-        <module>openjdk8-alfresco-share</module>
-        <module>openjdk8-alfresco-solr4</module>
-        <module>openjdk8-alfresco-search-services</module>
-        <module>openjdk11-alfresco-repository</module>
-        <module>openjdk11-alfresco-share</module>
-        <module>openjdk11-alfresco-search-services</module>
-        <module>graalvm-alfresco-repository</module>
-        <module>graalvm-alfresco-share</module>
-        <module>graalvm-alfresco-solr4</module>
-        <module>graalvm-alfresco-search-services</module>
+        <module>alfresco-repository-java8</module>
+        <module>alfresco-share-java8</module>
+        <module>alfresco-solr4-java8</module>
+        <module>alfresco-search-services-java8</module>
+        <module>alfresco-repository-java11</module>
+        <module>alfresco-share-java11</module>
+        <module>alfresco-search-services-java11</module>
     </modules>
 </project>

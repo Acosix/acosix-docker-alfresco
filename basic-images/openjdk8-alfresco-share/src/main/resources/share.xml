@@ -1,9 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<Context crossContext="true">
-    <Resources>
-        <PostResources base="/srv/alfresco/config" className="org.apache.catalina.webresources.DirResourceSet"
-            webAppMount="/WEB-INF/classes" />
-        <PostResources base="/srv/alfresco/modules" className="org.apache.catalina.webresources.DirResourceSet"
-            webAppMount="/WEB-INF/lib" />
-    </Resources>
-</Context>
