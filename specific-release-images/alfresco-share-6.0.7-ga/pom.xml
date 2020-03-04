@@ -4,82 +4,23 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>de.acosix.docker.alfresco</groupId>
-        <artifactId>specific-release-images-parent</artifactId>
+        <artifactId>acosix-docker-alfresco-specific-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>openjdk8-alfresco-repository-6.0.7-ga</artifactId>
+    <artifactId>alfresco-share-6.0.7-ga</artifactId>
 
     <properties>
-        <docker.from.name>openjdk8-alfresco-repository</docker.from.name>
+        <docker.from.name>alfresco-share-java8</docker.from.name>
         <docker.from.version>1.0.0-SNAPSHOT</docker.from.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.alfresco</groupId>
-            <artifactId>content-services-community</artifactId>
+            <artifactId>share</artifactId>
             <type>war</type>
-            <version>6.0.7-ga</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.alfresco</groupId>
-            <artifactId>api-explorer</artifactId>
-            <type>war</type>
-            <version>6.0.7-ga</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.alfresco</groupId>
-            <artifactId>alfresco-server-root</artifactId>
-            <type>war</type>
-            <version>6.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.alfresco.aos-module</groupId>
-            <artifactId>alfresco-vti-bin</artifactId>
-            <type>war</type>
-            <version>1.1.5</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.alfresco</groupId>
-            <artifactId>alfresco-share-services</artifactId>
-            <type>amp</type>
             <version>6.0.c</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.alfresco.aos-module</groupId>
-            <artifactId>alfresco-aos-module</artifactId>
-            <type>amp</type>
-            <version>1.1.6</version>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -90,7 +31,7 @@
 
         <dependency>
             <groupId>org.orderofthebee.support-tools</groupId>
-            <artifactId>support-tools-repo</artifactId>
+            <artifactId>support-tools-share</artifactId>
             <type>amp</type>
             <version>1.0.0.0</version>
             <exclusions>
@@ -103,7 +44,7 @@
 
         <dependency>
             <groupId>de.fmaul</groupId>
-            <artifactId>javascript-console-repo</artifactId>
+            <artifactId>javascript-console-share</artifactId>
             <type>amp</type>
             <version>0.6</version>
             <exclusions>
@@ -125,7 +66,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -136,6 +76,44 @@
                 <filtering>true</filtering>
             </resource>
         </resources>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>io.fabric8</groupId>
+                    <artifactId>docker-maven-plugin</artifactId>
+                    <configuration>
+                        <images>
+                            <!-- actually build two variant images with different Java versions -->
+                            <image>
+                                <name>${docker.image.id}-openjdk</name>
+                                <build>
+                                    <dockerFile>Dockerfile-openjdk</dockerFile>
+                                    <args>
+                                        <baseImageNameSuffix>-openjdk</baseImageNameSuffix>
+                                    </args>
+                                </build>
+                            </image>
+                            <image>
+                                <name>${docker.image.id}-graalvm</name>
+                                <build>
+                                    <contextDir>${project.build.directory}/ImageBuild</contextDir>
+                                    <dockerFile>Dockerfile-graalvm</dockerFile>
+                                    <args>
+                                        <baseImageNameSuffix>-graalvm</baseImageNameSuffix>
+                                    </args>
+                                    <tags>
+                                        <tag>latest</tag>
+                                        <tag>${project.version}</tag>
+                                    </tags>
+                                </build>
+                            </image>
+                        </images>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

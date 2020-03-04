@@ -410,7 +410,7 @@ function main()
    var alfrescoVersions, alfrescoArtifacts, repositories, requiredAlfrescoArtifacts;
 
    alfrescoVersions = {
-      ASS : envOr('ALFRESCO_ASS_VERSION', '1.1.1')
+      ASS : envOr('ALFRESCO_ASS_VERSION', '1.2.1')
    };
 
    alfrescoArtifacts = {

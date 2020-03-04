@@ -4,12 +4,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>de.acosix.docker.alfresco</groupId>
-        <artifactId>parent</artifactId>
+        <artifactId>acosix-docker-alfresco-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <groupId>de.acosix.docker.alfresco</groupId>
-    <artifactId>specific-release-images-parent</artifactId>
+    <artifactId>acosix-docker-alfresco-specific-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
@@ -17,9 +17,8 @@
     </properties>
 
     <modules>
-        <module>graalvm-alfresco-repository-6.0.7-ga</module>
-        <module>openjdk8-alfresco-repository-6.0.7-ga</module>
-        <module>graalvm-alfresco-share-6.0.7-ga</module>
-        <module>openjdk8-alfresco-share-6.0.7-ga</module>
+        <module>alfresco-repository-6.0.7-ga</module>
+        <module>alfresco-share-6.0.7-ga</module>
+        <module>alfresco-search-services-1.2.1</module>
     </modules>
 </project>

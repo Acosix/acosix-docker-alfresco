@@ -1,11 +1,6 @@
-FROM ${docker.from.id}:${docker.from.version}
+FROM ${docker.from.id}-graalvm:${docker.from.version}
 
-COPY *.war *.amp *.jar /tmp/
-
-ENV MAVEN_REQUIRED_ARTIFACTS=org.orderofthebee.support-tools:support-tools-repo:amp:1.0.0.0,de.fmaul:javascript-console-repo:amp:0.6 \
-   INSTALL_SHARE_SERVICES=true \
-   INSTALL_AOS=true \
-   INSTALL_API_EXPLORER=true
+COPY *.zip /tmp/
 
 LABEL vendor="${docker.labels.vendor}" \
    ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \
