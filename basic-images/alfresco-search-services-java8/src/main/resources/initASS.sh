@@ -173,7 +173,7 @@ then
          then
             sed -i "s/secureComms=.*/secureComms=https/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
          else
-            sed -i "s/secureComms=.*/secureComms=http/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
+            sed -i "s/secureComms=.*/secureComms=none/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
          fi
 
          if [[ ${core} == 'alfresco' ]]
