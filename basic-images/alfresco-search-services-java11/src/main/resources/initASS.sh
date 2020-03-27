@@ -2,6 +2,25 @@
 
 set -euo pipefail
 
+setInPropertiesFile() {
+   local fileName="$1"
+   local key="$2"
+   local value="${3:=''}"
+
+   # escape typical special characters in key / value (. and / for dot-separated keys or path values)
+   regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
+   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g'`
+   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+
+   if grep --quiet -E "^#?${regexSafeKey}=" ${fileName}; then
+      echo "Replacing existing entry for ${key} in ${fileName}" > /proc/1/fd/1
+      sed -i -r "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
+   else
+      echo "adding new entry for ${key} to ${fileName}" > /proc/1/fd/1
+      echo "${key}=${value}" >> ${fileName}
+   fi
+}
+
 ENABLED_CORES=${ENABLED_CORES:=alfresco,archive}
 
 SOLR_HOST=${SOLR_HOST:=localhost}
@@ -163,26 +182,26 @@ then
          echo "name=${core}" >> "/srv/alfresco-search-services/coreConfigs/${core}/core.properties"
          ln -s "/srv/alfresco-search-services/coreConfigs/${core}" "/srv/alfresco-search-services/solrhome/${core}"
 
-         sed -i "s/#data\.dir\.root=.*/data.dir.root=\/srv\/alfresco-search-services\/index/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
-         sed -i "s/#data\.dir\.store=.*/data.dir.store=${core}/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
-         sed -i "s/host=.*/host=${REPOSITORY_HOST}/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
-         sed -i "s/port=.*/port=${REPOSITORY_PORT}/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
-         sed -i "s/port\.ssl=.*/port.ssl=${REPOSITORY_SSL_PORT}/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
+         setInPropertiesFile /srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties data.dir.root /srv/alfresco-search-services/index
+         setInPropertiesFile /srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties data.dir.store ${core}
+         setInPropertiesFile /srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties alfresco.host ${REPOSITORY_HOST}
+         setInPropertiesFile /srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties alfresco.port ${REPOSITORY_PORT}
+         setInPropertiesFile /srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties alfresco.port.ssl ${REPOSITORY_SSL_PORT}
 
          if [[ $ACCESS_REPOSITORY_VIA_SSL == true ]]
          then
-            sed -i "s/secureComms=.*/secureComms=https/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
+            setInPropertiesFile /srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties alfresco.secureComms https
          else
-            sed -i "s/secureComms=.*/secureComms=none/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
+            setInPropertiesFile /srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties alfresco.secureComms none
          fi
 
          if [[ ${core} == 'alfresco' ]]
          then
-            sed -i "s/#alfresco\.stores=.*/alfresco.stores=workspace:\/\/SpacesStore/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
+            setInPropertiesFile /srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties alfresco.stores workspace://SpacesStore
          fi
          if [[ ${core} == 'archive' ]]
          then
-            sed -i "s/#alfresco\.stores=.*/alfresco.stores=archive:\/\/SpacesStore/" "/srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties"
+            setInPropertiesFile /srv/alfresco-search-services/solrhome/${core}/conf/solrcore.properties alfresco.stores archive://SpacesStore
          fi
 
          if [[ $NEW_CORE_LIST ]]
@@ -212,14 +231,7 @@ then
          # we only apply settings for core configs we created in this run
          if [[ $NEW_CORE_LIST =~ "^([^,]+,)*${coreName}(,[^,$]+)*$" ]]
          then
-            if grep --quiet "^${key}=" "/srv/alfresco-search-services/solrhome/${coreName}/conf/solrcore.properties"
-            then
-               # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-               value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-               sed -i "s/^${valueKey}=.*/${valueKey}=${value}/" "/srv/alfresco-search-services/solrhome/${coreName}/conf/solrcore.properties"
-            else
-               echo "${valueKey}=${value}" >> "/srv/alfresco-search-services/solrhome/${coreName}/conf/solrcore.properties"
-            fi
+            setInPropertiesFile /srv/alfresco-search-services/solrhome/${coreName}/conf/solrcore.properties ${valueKey} ${value}
          fi
 
       elif [[ $i == SHARED_* ]]
@@ -228,14 +240,7 @@ then
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          value=`echo "$i" | cut -d '=' -f 2-`
 
-         if grep --quiet "^${key}=" "/srv/alfresco-search-services/solrhome/conf/shared.properties"
-         then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^${key}=.*/${key}=${value}/" "/srv/alfresco-search-services/solrhome/conf/shared.properties"
-         else
-            echo "${key}=${value}" >> "/srv/alfresco-search-services/solrhome/conf/shared.properties"
-         fi
+         setInPropertiesFile /srv/alfresco-search-services/solrhome/conf/shared.properties ${key} ${value}
       fi
    done
 

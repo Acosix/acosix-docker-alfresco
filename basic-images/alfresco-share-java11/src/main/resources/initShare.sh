@@ -2,6 +2,41 @@
 
 set -euo pipefail
 
+file_env() {
+   local var="$1"
+   local fileVar="${var}_FILE"
+   local def="${2:-}"
+   if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+      echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
+      exit 1
+   fi
+   local val="$def"
+   if [ "${!var:-}" ]; then
+      val="${!var}"
+   elif [ "${!fileVar:-}" ]; then
+      val="$(< "${!fileVar}")"
+   fi
+   unset "$fileVar"
+   echo "$val"
+}
+
+setInPropertiesFile() {
+   local fileName="$1"
+   local key="$2"
+   local value="${3:=''}"
+
+   # escape typical special characters in key / value (. and / for dot-separated keys or path values)
+   regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
+   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g'`
+   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+
+   if grep --quiet -E "^#?${regexSafeKey}=" ${fileName}; then
+      sed -i -r "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
+   else
+      echo "${key}=${value}" >> ${fileName}
+   fi
+}
+
 DEBUG=${DEBUG:=false}
 
 REPOSITORY_HOST=${REPOSITORY_HOST:=localhost}
@@ -131,15 +166,15 @@ then
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         value=`echo "$i" | cut -d '=' -f 2-`
          
-         if grep --quiet "^${key}=" /srv/alfresco/config/share-global.properties; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^${key}=.*/${key}=${value}/" /srv/alfresco/config/share-global.properties
-         else
-            echo "${key}=${value}" >> /srv/alfresco/config/share-global.properties
+         # support secrets mounted via files
+         if [[ $key == *-FILE ]]
+         then
+            value="$(< "${value}")"
+            key=`echo "$key" | sed -r 's/-FILE$//'`
          fi
+
+         setInPropertiesFile /srv/alfresco/config/share-global.properties ${key} ${value}
       fi
       
       if [[ $i == LOG4J-APPENDER_* ]]
@@ -147,16 +182,10 @@ then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          appenderName=`echo $key | cut -d '.' -f 1`
-         value=`echo "$i" | cut -d '=' -f 2-`
-         if grep --quiet "^${key}=" $LOG4J_FILE; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^log4j\.appender\.${key}=.*/log4j.appender.${key}=${value}/" $LOG4J_FILE
-         else
-            echo "log4j.appender.${key}=${value}" >> $LOG4J_FILE
-         fi
-         
-         if [[ ! $CUSTOM_APPENDER_LIST =~ "^,([^,]+,)*${appenderName}(,[^,]+)*$" ]]
+
+         setInPropertiesFile $LOG4J_FILE "log4j.appender.${key}" ${value}
+
+         if [[ ! $CUSTOM_APPENDER_LIST =~ "^,([^,]+,)*${appenderName}(,[^,$]+)*$" ]]
          then
             CUSTOM_APPENDER_LIST="${CUSTOM_APPENDER_LIST},${appenderName}"
          fi
@@ -166,28 +195,16 @@ then
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         value=`echo "$i" | cut -d '=' -f 2-`
-         if grep --quiet "^${key}=" $LOG4J_FILE; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^log4j\.logger\.${key}=.*/log4j.logger.${key}=${value}/" $LOG4J_FILE
-         else
-            echo "log4j.logger.${key}=${value}" >> $LOG4J_FILE
-         fi
+
+         setInPropertiesFile $LOG4J_FILE "log4j.logger.${key}" ${value}
       fi
 
       if [[ $i == LOG4J-ADDITIVITY_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         value=`echo "$i" | cut -d '=' -f 2-`
-         if grep --quiet "^${key}=" $LOG4J_FILE; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^log4j\.additivity\.${key}=.*/log4j.additivity.${key}=${value}/" $LOG4J_FILE
-         else
-            echo "log4j.additivity.${key}=${value}" >> $LOG4J_FILE
-         fi
+
+         setInPropertiesFile $LOG4J_FILE "log4j.additivity.${key}" ${value}
       fi
    done
 
