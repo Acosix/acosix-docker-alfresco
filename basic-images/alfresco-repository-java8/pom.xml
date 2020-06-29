@@ -11,9 +11,9 @@
     <artifactId>alfresco-repository-java8</artifactId>
 
     <properties>
-        <docker.from.name>baseimage-tomcat8</docker.from.name>
+        <docker.from.name>baseimage-tomcat8-java8</docker.from.name>
         <docker.from.version>1.0.0-SNAPSHOT</docker.from.version>
-        <imagemagick.version>7.0.9-27</imagemagick.version>
+        <imagemagick.version>7.0.10-22</imagemagick.version>
     </properties>
 
     <dependencies>

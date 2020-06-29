@@ -1,4 +1,4 @@
-FROM ${docker.from.id}-openjdk8:${docker.from.version}
+FROM ${docker.from.id}-openjdk:${docker.from.version}
 
 # Add local transformation tooling
 RUN install_clean \
@@ -126,7 +126,7 @@ RUN tar xzf /tmp/alfresco-pdf-renderer-*-linux.tgz \
    && chmod 755 /usr/bin/alfresco-pdf-renderer
 
 # add prepared files that would be too awkward to handle via RUN / sed
-COPY *.jar alfresco.xml alfresco-logrotate.d initAlfresco.sh prepareWarFiles.js alfresco-ng.conf repository-config /tmp/
+COPY *.jar alfresco.xml ROOT.xml _vti_bin.xml alfresco-logrotate.d initAlfresco.sh prepareWarFiles.js alfresco-ng.conf repository-config /tmp/
 
 # apply our Alfresco Repository default configurations
 RUN mkdir -p /srv/alfresco/config /srv/alfresco/modules /etc/tomcat8/Catalina/localhost \
@@ -134,7 +134,7 @@ RUN mkdir -p /srv/alfresco/config /srv/alfresco/modules /etc/tomcat8/Catalina/lo
    && mv /tmp/alfresco-global.properties /srv/alfresco/config/ \
    && mv /tmp/alfresco /srv/alfresco/config/ \
    && find /srv/alfresco/config -type d -exec chmod +x '{}' \; \
-   && mv /tmp/alfresco.xml /etc/tomcat8/Catalina/localhost/ \
+   && mv /tmp/*.xml /etc/tomcat8/Catalina/localhost/ \
    && mv /tmp/alfresco-logrotate.d /etc/logrotate.d/alfresco \
    && touch /var/lib/tomcat8/logs/.alfresco-logrotate-dummy \
    && mv /tmp/prepareWarFiles.js /var/lib/tomcat8/ \

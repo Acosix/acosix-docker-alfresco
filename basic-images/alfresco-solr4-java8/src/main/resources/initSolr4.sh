@@ -2,6 +2,41 @@
 
 set -euo pipefail
 
+file_env() {
+   local var="$1"
+   local fileVar="${var}_FILE"
+   local def="${2:-}"
+   if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+      echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
+      exit 1
+   fi
+   local val="$def"
+   if [ "${!var:-}" ]; then
+      val="${!var}"
+   elif [ "${!fileVar:-}" ]; then
+      val="$(< "${!fileVar}")"
+   fi
+   unset "$fileVar"
+   echo "$val"
+}
+
+setInPropertiesFile() {
+   local fileName="$1"
+   local key="$2"
+   local value="${3:=''}"
+
+   # escape typical special characters in key / value (. and / for dot-separated keys or path values)
+   regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
+   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
+   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
+
+   if grep --quiet -E "^#?${regexSafeKey}=" ${fileName}; then
+      sed -i -r "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
+   else
+      echo "${key}=${value}" >> ${fileName}
+   fi
+}
+
 ENABLED_CORES=${ENABLED_CORES:=alfresco,archive}
 
 SOLR_HOST=${SOLR_HOST:=localhost}
@@ -43,6 +78,7 @@ then
          mv /tmp/*.jar /srv/alfresco-solr4/modules/
       fi
 
+      echo "Updating webapp descriptor" > /proc/1/fd/1
       mkdir -p /etc/tomcat8/Catalina/localhost
       mv /srv/alfresco-solr4/solrhome/context.xml /etc/tomcat8/Catalina/localhost/solr4.xml
       sed -i 's/@@ALFRESCO_SOLR4_DIR@@/\/srv\/alfresco-solr4\/solrhome/' /etc/tomcat8/Catalina/localhost/solr4.xml
@@ -54,6 +90,7 @@ then
       sed -i 's/rootLogger=ERROR, file, CONSOLE/rootLogger=ERROR, file/' /srv/alfresco-solr4/solrhome/log4j-solr.properties
       sed -i 's/File=solr\.log/File=\${catalina.base}\/logs\/solr.log/' /srv/alfresco-solr4/solrhome/log4j-solr.properties
 
+      echo "Preparing home, content store, index" > /proc/1/fd/1
       if [[ -z "$(ls -A /srv/alfresco-solr4/solrhome/templates/rerank)" && -z "$(ls -A /srv/alfresco-solr4/solrhome/templates/vanilla)" ]]
       then
          # old SOLR 4 version may not provide any templates
@@ -113,6 +150,16 @@ then
    sed -i "s/%PROXY_PORT_RAW%/${PROXY_PORT_RAW}/" /etc/tomcat8/server.xml
    sed -i "s/%PROXY_SSL_PORT_RAW%/${PROXY_SSL_PORT_RAW}/" /etc/tomcat8/server.xml
 
+   if [[ -f '/srv/alfresco-solr4/solrhome/conf/shared.properties' ]]
+   then
+      echo "Initialising shared.properties" > /proc/1/fd/1
+      sed -i 's/solr\.host=localhost/solr.host=%PUBLIC_SOLR_HOST%/' /srv/alfresco-solr4/solrhome/conf/shared.properties
+      sed -i 's/#solr\.port=8983/solr.port=%PUBLIC_SOLR_PORT%/' /srv/alfresco-solr4/solrhome/conf/shared.properties
+      sed -i "s/%PUBLIC_SOLR_HOST%/${SOLR_HOST}/g" /srv/alfresco-solr4/solrhome/conf/shared.properties
+      sed -i "s/%PUBLIC_SOLR_PORT%/${SOLR_PORT}/g" /srv/alfresco-solr4/solrhome/conf/shared.properties
+   fi
+
+   echo "Processing environment variables for logging and start script(s)" > /proc/1/fd/1
    CUSTOM_APPENDER_LIST='';
 
    # otherwise for will also cut on whitespace
@@ -120,17 +167,14 @@ then
    for i in `env`
    do
       value=`echo "$i" | cut -d '=' -f 2-`
+
       if [[ $i == LOG4J-APPENDER_* ]]
       then
+         echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          appenderName=`echo $key | cut -d '.' -f 1`
-         if grep --quiet "^${key}=" /srv/alfresco-solr4/solrhome/log4j-solr.properties; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^log4j\.appender\.${key}=.*/log4j.appender.${key}=${value}/" /srv/alfresco-solr4/solrhome/log4j-solr.properties
-         else
-            echo "log4j.appender.${key}=${value}" >> /srv/alfresco-solr4/solrhome/log4j-solr.properties
-         fi
+
+         setInPropertiesFile /srv/alfresco-solr4/solrhome/log4j-solr.properties log4j.appender.${key} ${value}
 
          if [[ ! $CUSTOM_APPENDER_LIST =~ "^,([^,]+,)*${appenderName}(,[^,$]+)*$" ]]
          then
@@ -138,29 +182,23 @@ then
          fi
       elif [[ $i == LOG4J-LOGGER_* ]]
       then
+         echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         if grep --quiet "^${key}=" /srv/alfresco-solr4/solrhome/log4j-solr.properties; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^log4j\.logger\.${key}=.*/log4j.logger.${key}=${value}/" /srv/alfresco-solr4/solrhome/log4j-solr.properties
-         else
-            echo "log4j.logger.${key}=${value}" >> /srv/alfresco-solr4/solrhome/log4j-solr.properties
-         fi
+
+         setInPropertiesFile /srv/alfresco-solr4/solrhome/log4j-solr.properties log4j.logger.${key} ${value}
+
       elif [[ $i == LOG4J-ADDITIVITY_* ]]
       then
+         echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         if grep --quiet "^${key}=" /srv/alfresco-solr4/solrhome/log4j-solr.properties; then
-            # encode any / in $value to avoid interference with sed (note: sh collapses 2 \'s into 1)
-            value=`echo "$value" | sed -r 's/\\//\\\\\//g'`
-            sed -i "s/^log4j\.additivity\.${key}=.*/log4j.additivity.${key}=${value}/" /srv/alfresco-solr4/solrhome/log4j-solr.properties
-         else
-            echo "log4j.additivity.${key}=${value}" >> /srv/alfresco-solr4/solrhome/log4j-solr.properties
-         fi
+
+         setInPropertiesFile /srv/alfresco-solr4/solrhome/log4j-solr.properties log4j.additivity.${key} ${value}
+
       fi
    done
    sed -i 's/rootLogger=ERROR, file/rootLogger=ERROR, file, ${CUSTOM_APPENDER_LIST}/' /srv/alfresco-solr4/solrhome/log4j-solr.properties
 
-
+   echo "Initialising SOLR core configurations" > /proc/1/fd/1
    NEW_CORE_LIST=''
    for core in "${CORE_LIST[@]}"
    do
@@ -221,6 +259,13 @@ then
          valueKey=`echo $key | cut -d '.' -f 2-`
          value=`echo "$i" | cut -d '=' -f 2-`
 
+         # support secrets mounted via files
+         if [[ $key == *_FILE ]]
+         then
+            value="$(< "${valueKey}")"
+            valueKey=`echo "$key" | sed -r 's/_FILE$//'`
+         fi
+
          # we only apply settings for core configs we created in this run
          if [[ $NEW_CORE_LIST =~ "^([^,]+,)*${coreName}(,[^,$]+)*$" ]]
          then
@@ -249,7 +294,7 @@ then
    done
 
    # always ensure tomcat8 user owns the index/config/cache
-   chown -R ass:ass /srv/alfresco-solr4
+   chown -R tomcat8:tomcat8 /srv/alfresco-solr4/solrhome /srv/alfresco-solr4/index
 
    touch /var/log/tomcat8/.solr4-logrotate-dummy
    touch /var/lib/tomcat8/.solr4InitDone

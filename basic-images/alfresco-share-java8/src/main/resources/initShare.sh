@@ -27,8 +27,8 @@ setInPropertiesFile() {
 
    # escape typical special characters in key / value (. and / for dot-separated keys or path values)
    regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
-   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g'`
-   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g'`
+   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
+   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
 
    if grep --quiet -E "^#?${regexSafeKey}=" ${fileName}; then
       sed -i -r "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
@@ -166,12 +166,17 @@ then
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         
+
          # support secrets mounted via files
+         # check legacy suffix -FILE, then proper _FILE (consistency with file_env)
          if [[ $key == *-FILE ]]
          then
             value="$(< "${value}")"
             key=`echo "$key" | sed -r 's/-FILE$//'`
+         elif [[ $key == *_FILE ]]
+         then
+            value="$(< "${value}")"
+            key=`echo "$key" | sed -r 's/_FILE$//'`
          fi
 
          setInPropertiesFile /srv/alfresco/config/share-global.properties ${key} ${value}
@@ -210,14 +215,14 @@ then
 
    if [[ $LOG4J_FILE == /tmp/share/WEB-INF/classes/log4j.properties ]]
    then
-      sed -i "s/rootLogger=error, Console, File/rootLogger=error, File${CUSTOM_APPENDER_LIST}/" $LOG4J_FILE
+      setInPropertiesFile $LOG4J_FILE log4j.rootLogger "WARN, File${CUSTOM_APPENDER_LIST}"
       # re-zip share.war (after logging config updates)
       cd /tmp/share
       zip -r /var/lib/tomcat8/webapps/share.war .
       cd /
       rm -rf /tmp/share
    else
-      sed -i "s/rootLogger=(.+)/rootLogger=\1${CUSTOM_APPENDER_LIST}/" $LOG4J_FILE
+      setInPropertiesFile $LOG4J_FILE log4j.rootLogger "WARN, File${CUSTOM_APPENDER_LIST}"
    fi
 
    # Share has issues when WAR files are not unpacked
