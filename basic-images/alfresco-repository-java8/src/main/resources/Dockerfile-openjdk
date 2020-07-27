@@ -61,7 +61,7 @@ RUN install_clean \
     zlib1g-dev \
     libopenjp2-7 \
     libopenjp2-7-dev \
-  && wget -O /tmp/ImageMagick.tar.gz https://www.imagemagick.org/download/ImageMagick-${imagemagick.version}.tar.gz \
+  && wget -O /tmp/ImageMagick.tar.gz https://www.imagemagick.org/download/releases/ImageMagick-${imagemagick.version}.tar.gz \
   && cd /tmp \
   && tar xzf /tmp/ImageMagick.tar.gz \
   && cd /tmp/ImageMagick-${imagemagick.version} \
@@ -105,7 +105,7 @@ RUN install_clean \
     libzzip-dev \
     libopenjp2-7-dev
 
-RUN wget -O /tmp/wkhtmltox.deb https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb \
+RUN wget -O /tmp/wkhtmltox.deb https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.bionic_amd64.deb \
    && install_clean \
      fontconfig \
      xfonts-75dpi \
