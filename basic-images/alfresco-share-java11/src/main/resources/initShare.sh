@@ -142,6 +142,15 @@ then
       rm -f /tmp/*.jar /tmp/*.amp /tmp/*.war*
    fi
 
+   for descriptor in /etc/tomcat8/Catalina/localhost/*.xml
+   do
+      appName=`echo "$descriptor" | cut -d '/' -f 6- | cut -d '.' -f 1`
+      if [[ ! -f "/var/lib/tomcat8/webapps/${appName}.war" ]]
+      then
+         mv $descriptor "${descriptor}.not-present"
+      fi
+   done
+
    CUSTOM_APPENDER_LIST=''
 
    LOG4J_FILE=''

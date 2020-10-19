@@ -1,0 +1,91 @@
+
+grant codeBase "file:${catalina.base}/webapps/alfresco/-" {
+    // alfresco-xmlfactory looks for factories
+    permission java.io.FilePermission "\${java.home}/lib/*", "read";
+    permission java.io.FilePermission "${catalina.base}/logs/-", "read,write,delete";
+    permission java.io.FilePermission "\${java.io.tmpdir}/-", "read,write,delete";
+    // common transformers
+    permission java.io.FilePermission "/usr/bin/*", "read,execute";
+    permission java.io.FilePermission "/usr/local/bin/*", "read,execute";
+    // OfficeUtils.findOfficeHome checks various common paths to find soffice
+    permission java.io.FilePermission "/usr/lib/openoffice", "read";
+    permission java.io.FilePermission "/usr/lib/openoffice/-", "read,execute";
+    permission java.io.FilePermission "/usr/lib/libreoffice", "read";
+    permission java.io.FilePermission "/usr/lib/libreoffice/-", "read,execute";
+    permission java.io.FilePermission "/usr/lib64/libreoffice", "read";
+    permission java.io.FilePermission "/usr/lib64/libreoffice/-", "read,execute";
+    permission java.io.FilePermission "/opt/libreoffice", "read";
+    permission java.io.FilePermission "/opt/libreoffice/-", "read,execute";
+    permission java.io.FilePermission "/opt/openoffice.org3", "read";
+    permission java.io.FilePermission "/opt/openoffice.org3/-", "read,execute";
+    permission java.io.FilePermission "/var/lib/ImageMagick/-", "read,execute";
+    // default lookup in library (could be changed via -Dorg.quartz.properties=)
+    permission java.io.FilePermission "quartz.properties", "read";
+    // in case any read is performed via file instead of classpath
+    permission java.io.FilePermission "/srv/alfresco/config/-", "read";
+    // should be a mounted volume / folder for contentstore(s) and any other persistent data
+    permission java.io.FilePermission "/srv/alfresco/data/-", "read,write,delete";
+    // e.g. for Thread Dump in Support Tools
+    permission java.lang.management.ManagementPermission "monitor";
+    // soo many libraries need to use reflection
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+    permission java.lang.RuntimePermission "accessClassInPackage.*";
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    // Rhino script engine creates a classloader for dynamically compiled scripts
+    permission java.lang.RuntimePermission "createClassLoader";
+    permission java.lang.RuntimePermission "getClassLoader";
+    permission java.lang.RuntimePermission "getProtectionDomain";
+    // PATH needed for runtime transformer tool invocations
+    // OOTBee Support Tools reads full set
+    permission java.lang.RuntimePermission "getenv.*";
+    permission java.lang.RuntimePermission "modifyThread";
+    permission java.lang.RuntimePermission "setContextClassLoader";
+    permission java.lang.RuntimePermission "shutdownHooks";
+    permission java.net.NetPermission "specifyStreamHandler";
+    permission java.net.SocketPermission "*", "connect";
+    // looks like this is used for dynamic client ports in Apache HTTP Client connections
+    permission java.net.SocketPermission "localhost:0", "listen";
+    // allow FTP (active), inboundSMTP, and FTP (passive)
+    permission java.net.SocketPermission "localhost:10021", "listen";
+    permission java.net.SocketPermission "localhost:10025", "listen";
+    permission java.net.SocketPermission "localhost:11000-11099", "listen";
+    permission java.security.SecurityPermission "insertProvider.*";
+    permission java.security.SecurityPermission "putProviderProperty.*";
+    // read,write required due to DescriptorStartupLog (excessive - should be patched/removed to limit to read-only)
+    permission java.util.PropertyPermission "*", "read,write";
+    // write required due to RuntimeSystemPropertiesSetter (should be removed in Community as useless)
+    permission java.util.PropertyPermission "alfresco.jmx.dir", "write";
+
+    permission javax.management.MBeanServerPermission "findMBeanServer";
+
+    // custom Apache ibats/Commons OGNL
+    // not sure if all are needed, but those packages are used in ibatis configs
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.java.util.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.activiti.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.ibatis.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.blog.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.calendar.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.copy.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.discussion.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.domain.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.download.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.node.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.security.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.util.*";
+};
+
+// limited privileges for dropped in JAR extension modules
+// extension modules could require arbitrary permissions - we can't predict, so keep to a sane/safe default
+// policy could be expanded in a derived image, or extensions be added to webapp with its more extensive policy
+grant codeBase "file:/srv/alfresco/modules/-" {
+    permission java.io.FilePermission "\${java.io.tmpdir}/-", "read,write,delete";
+    permission java.io.FilePermission "/srv/alfresco/config/-", "read";
+    permission java.io.FilePermission "/srv/alfresco/data/-", "read,write,delete";
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+    permission java.lang.RuntimePermission "accessClassInPackage.*";
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.net.SocketPermission "*", "connect";
+    permission java.util.PropertyPermission "*", "read";
+
+    permission javax.management.MBeanServerPermission "findMBeanServer";
+};

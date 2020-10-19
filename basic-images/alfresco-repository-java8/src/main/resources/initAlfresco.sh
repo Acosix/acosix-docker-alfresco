@@ -310,6 +310,15 @@ then
       rm -f /tmp/*.jar /tmp/*.amp /tmp/*.war*
    fi
 
+   for descriptor in /etc/tomcat8/Catalina/localhost/*.xml
+   do
+      appName=`echo "$descriptor" | cut -d '/' -f 6- | cut -d '.' -f 1`
+      if [[ ! -f "/var/lib/tomcat8/webapps/${appName}.war" ]]
+      then
+         mv $descriptor "${descriptor}.not-present"
+      fi
+   done
+
    # fixup bundled log4j.properties to use proper logfile path (startup doesn't immediately pick up dev-log4j.properties)
    unzip -qq /var/lib/tomcat8/webapps/alfresco.war WEB-INF/classes/log4j.properties -d /tmp/alfresco
    sed -i 's/File=alfresco\.log/File=\${catalina.base}\/logs\/alfresco.log/' /tmp/alfresco/WEB-INF/classes/log4j.properties

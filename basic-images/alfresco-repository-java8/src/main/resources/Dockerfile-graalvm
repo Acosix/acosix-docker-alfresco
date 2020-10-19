@@ -65,7 +65,7 @@ RUN install_clean \
   && cd /tmp \
   && tar xzf /tmp/ImageMagick.tar.gz \
   && cd /tmp/ImageMagick-${imagemagick.version} \
-  && ./configure --prefix=/var/lib/ImageMagick-${imagemagick.version} --with-x=no \
+  && ./configure --prefix=/var/lib/ImageMagick --with-x=no \
   && make \
   && make install \
   && cd / \
@@ -126,7 +126,7 @@ RUN tar xzf /tmp/alfresco-pdf-renderer-*-linux.tgz \
    && chmod 755 /usr/bin/alfresco-pdf-renderer
 
 # add prepared files that would be too awkward to handle via RUN / sed
-COPY *.jar alfresco.xml ROOT.xml _vti_bin.xml alfresco-logrotate.d initAlfresco.sh prepareWarFiles.js alfresco-ng.conf repository-config /tmp/
+COPY *.jar alfresco.xml ROOT.xml _vti_bin.xml api-explorer.xml catalina.policy alfresco-logrotate.d initAlfresco.sh prepareWarFiles.js alfresco-ng.conf repository-config /tmp/
 
 # apply our Alfresco Repository default configurations
 RUN mkdir -p /srv/alfresco/config /srv/alfresco/modules /etc/tomcat8/Catalina/localhost \
@@ -135,6 +135,8 @@ RUN mkdir -p /srv/alfresco/config /srv/alfresco/modules /etc/tomcat8/Catalina/lo
    && mv /tmp/alfresco /srv/alfresco/config/ \
    && find /srv/alfresco/config -type d -exec chmod +x '{}' \; \
    && mv /tmp/*.xml /etc/tomcat8/Catalina/localhost/ \
+   && cat /tmp/catalina.policy >> /etc/tomcat8/catalina.policy \
+   && rm /tmp/catalina.policy \
    && mv /tmp/alfresco-logrotate.d /etc/logrotate.d/alfresco \
    && touch /var/lib/tomcat8/logs/.alfresco-logrotate-dummy \
    && mv /tmp/prepareWarFiles.js /var/lib/tomcat8/ \

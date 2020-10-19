@@ -13,14 +13,14 @@
     <properties>
         <docker.from.name>baseimage-tomcat8-java8</docker.from.name>
         <docker.from.version>1.0.0-SNAPSHOT</docker.from.version>
-        <imagemagick.version>7.0.10-22</imagemagick.version>
+        <imagemagick.version>7.0.10-34</imagemagick.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.10</version>
+            <version>42.2.16</version>
             <type>jar</type>
         </dependency>
 
