@@ -63,17 +63,11 @@ grant codeBase "file:${catalina.base}/webapps/alfresco/-" {
 
     // custom Apache ibats/Commons OGNL
     // not sure if all are needed, but those packages are used in ibatis configs
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.java.lang.*";
     permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.java.util.*";
     permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.activiti.*";
     permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.ibatis.*";
-    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.blog.*";
-    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.calendar.*";
-    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.copy.*";
-    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.discussion.*";
-    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.domain.*";
-    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.download.*";
-    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.node.*";
-    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.security.*";
+    permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.*";
     permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.util.*";
 };
 
