@@ -25,6 +25,9 @@ grant codeBase "file:${catalina.base}/webapps/alfresco/-" {
     permission java.io.FilePermission "/srv/alfresco/config/-", "read";
     // should be a mounted volume / folder for contentstore(s) and any other persistent data
     permission java.io.FilePermission "/srv/alfresco/data/-", "read,write,delete";
+    // ImporterBootstrap tries file lookup (unlikely match) before checking for classpath (most common case)
+    // don't want to allow everything, so restrict to alfresco/* paths
+    permission java.io.FilePermission "alfresco/-", "read";
     // e.g. for Thread Dump in Support Tools
     permission java.lang.management.ManagementPermission "monitor";
     // soo many libraries need to use reflection
