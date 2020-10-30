@@ -13,6 +13,8 @@ grant codeBase "file:${catalina.base}/webapps/share/-" {
     // Rhino script engine creates a classloader for dynamically compiled scripts
     permission java.lang.RuntimePermission "createClassLoader";
     permission java.lang.RuntimePermission "getProtectionDomain";
+    // any library may check an env setting, especially in a Docker setup
+    permission java.lang.RuntimePermission "getenv.*";
     permission java.net.NetPermission "specifyStreamHandler";
     permission java.net.SocketPermission "*", "connect";
     permission java.security.SecurityPermission "insertProvider.*";

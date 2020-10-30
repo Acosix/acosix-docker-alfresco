@@ -38,8 +38,7 @@ grant codeBase "file:${catalina.base}/webapps/alfresco/-" {
     permission java.lang.RuntimePermission "createClassLoader";
     permission java.lang.RuntimePermission "getClassLoader";
     permission java.lang.RuntimePermission "getProtectionDomain";
-    // PATH needed for runtime transformer tool invocations
-    // OOTBee Support Tools reads full set
+    // any library may check an env setting, especially in a Docker setup
     permission java.lang.RuntimePermission "getenv.*";
     permission java.lang.RuntimePermission "modifyThread";
     permission java.lang.RuntimePermission "setContextClassLoader";
