@@ -21,7 +21,7 @@ setInPropertiesFile() {
    fi
 }
 
-ENABLED_CORES=${ENABLED_CORES:-alfresco,archive}
+ENABLED_CORES=${ENABLED_CORES:-}
 
 SOLR_HOST=${SOLR_HOST:-localhost}
 SOLR_PORT=${SOLR_PORT:-8983}
@@ -157,7 +157,7 @@ then
    NEW_CORE_LIST=''
    for core in "${CORE_LIST[@]}"
    do
-      if [[ ! -d "/srv/alfresco-search-services/coreConfigs/${core}" || ! -f "/srv/alfresco-search-services/coreConfigs/${core}/core.properties" ]]
+      if [[ ! -z $core && ( ! -d "/srv/alfresco-search-services/coreConfigs/${core}" || ! -f "/srv/alfresco-search-services/coreConfigs/${core}/core.properties" ) ]]
       then
          echo "Setting up SOLR core ${core}" > /proc/1/fd/1
          cp -r /srv/alfresco-search-services/solrhome/templates/rerank "/srv/alfresco-search-services/coreConfigs/${core}"
