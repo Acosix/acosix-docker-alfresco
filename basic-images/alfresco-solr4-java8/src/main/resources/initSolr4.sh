@@ -23,7 +23,7 @@ file_env() {
 setInPropertiesFile() {
    local fileName="$1"
    local key="$2"
-   local value="${3:=''}"
+   local value="${3:-''}"
 
    # escape typical special characters in key / value (. and / for dot-separated keys or path values)
    regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
@@ -37,23 +37,23 @@ setInPropertiesFile() {
    fi
 }
 
-ENABLED_CORES=${ENABLED_CORES:=alfresco,archive}
+ENABLED_CORES=${ENABLED_CORES:-alfresco,archive}
 
-SOLR_HOST=${SOLR_HOST:=localhost}
-SOLR_PORT=${SOLR_PORT:=8983}
+SOLR_HOST=${SOLR_HOST:-localhost}
+SOLR_PORT=${SOLR_PORT:-8983}
 
-REPOSITORY_HOST=${REPOSITORY_HOST:=localhost}
-REPOSITORY_PORT=${REPOSITORY_PORT:=80}
+REPOSITORY_HOST=${REPOSITORY_HOST:-localhost}
+REPOSITORY_PORT=${REPOSITORY_PORT:-80}
 
-ACCESS_REPOSITORY_VIA_SSL=${ACCESS_REPOSITORY_VIA_SSL:=false}
-REPOSITORY_SSL_PORT=${REPOSITORY_SSL_PORT:=443}
+ACCESS_REPOSITORY_VIA_SSL=${ACCESS_REPOSITORY_VIA_SSL:-false}
+REPOSITORY_SSL_PORT=${REPOSITORY_SSL_PORT:-443}
 
-PROXY_NAME=${PROXY_NAME:=localhost}
+PROXY_NAME=${PROXY_NAME:-localhost}
 PROXY_NAME_RAW=${PROXY_NAME_RAW:-$PROXY_NAME}
-PROXY_PORT_RAW=${PROXY_PORT_RAW:=8082}
-PROXY_SSL_PORT_RAW=${PROXY_SSL_PORT_RAW:=8083}
+PROXY_PORT_RAW=${PROXY_PORT_RAW:-8082}
+PROXY_SSL_PORT_RAW=${PROXY_SSL_PORT_RAW:-8083}
 
-INIT_KEYSTORE_FROM_DEFAULT=${INIT_KEYSTORE_FROM_DEFAULT:=true}
+INIT_KEYSTORE_FROM_DEFAULT=${INIT_KEYSTORE_FROM_DEFAULT:-true}
 
 IFS=',' read -ra CORE_LIST <<< "$ENABLED_CORES"
 

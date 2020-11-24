@@ -5,7 +5,7 @@ set -euo pipefail
 setInPropertiesFile() {
    local fileName="$1"
    local key="$2"
-   local value="${3:=''}"
+   local value="${3:-''}"
 
    # escape typical special characters in key / value (. and / for dot-separated keys or path values)
    regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
@@ -21,15 +21,15 @@ setInPropertiesFile() {
    fi
 }
 
-ENABLED_CORES=${ENABLED_CORES:=alfresco,archive}
+ENABLED_CORES=${ENABLED_CORES:-alfresco,archive}
 
-SOLR_HOST=${SOLR_HOST:=localhost}
-SOLR_PORT=${SOLR_PORT:=8983}
+SOLR_HOST=${SOLR_HOST:-localhost}
+SOLR_PORT=${SOLR_PORT:-8983}
 
-REPOSITORY_HOST=${REPOSITORY_HOST:=localhost}
-REPOSITORY_PORT=${REPOSITORY_PORT:=80}
-ACCESS_REPOSITORY_VIA_SSL=${ACCESS_REPOSITORY_VIA_SSL:=false}
-REPOSITORY_SSL_PORT=${REPOSITORY_SSL_PORT:=443}
+REPOSITORY_HOST=${REPOSITORY_HOST:-localhost}
+REPOSITORY_PORT=${REPOSITORY_PORT:-80}
+ACCESS_REPOSITORY_VIA_SSL=${ACCESS_REPOSITORY_VIA_SSL:-false}
+REPOSITORY_SSL_PORT=${REPOSITORY_SSL_PORT:-443}
 
 IFS=',' read -ra CORE_LIST <<< "$ENABLED_CORES"
 
