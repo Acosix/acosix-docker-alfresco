@@ -28,6 +28,8 @@ grant codeBase "file:${catalina.base}/webapps/alfresco/-" {
     // ImporterBootstrap tries file lookup (unlikely match) before checking for classpath (most common case)
     // don't want to allow everything, so restrict to alfresco/* paths
     permission java.io.FilePermission "alfresco/-", "read";
+    // any config lookup may use file-based lookup instead of classpath
+    permission java.io.FilePermission "shared/classes/alfresco/-", "read";
     // e.g. for Thread Dump in Support Tools
     permission java.lang.management.ManagementPermission "monitor";
     // soo many libraries need to use reflection
@@ -36,8 +38,11 @@ grant codeBase "file:${catalina.base}/webapps/alfresco/-" {
     permission java.lang.RuntimePermission "accessDeclaredMembers";
     // Rhino script engine creates a classloader for dynamically compiled scripts
     permission java.lang.RuntimePermission "createClassLoader";
+    // cglib dynamically defines classes
+    permission java.lang.RuntimePermission "defineClass";
     permission java.lang.RuntimePermission "getClassLoader";
     permission java.lang.RuntimePermission "getProtectionDomain";
+    permission java.lang.RuntimePermission "getStackWalkerWithClassReference";
     // any library may check an env setting, especially in a Docker setup
     permission java.lang.RuntimePermission "getenv.*";
     permission java.lang.RuntimePermission "modifyThread";
@@ -58,6 +63,8 @@ grant codeBase "file:${catalina.base}/webapps/alfresco/-" {
     // write required due to RuntimeSystemPropertiesSetter (should be removed in Community as useless)
     permission java.util.PropertyPermission "alfresco.jmx.dir", "write";
 
+    // Apache Camel (used for ActiveMQ) may want to create an mbean server if no existing is found
+    permission javax.management.MBeanServerPermission "createMBeanServer";
     permission javax.management.MBeanServerPermission "findMBeanServer";
 
     // custom Apache ibats/Commons OGNL

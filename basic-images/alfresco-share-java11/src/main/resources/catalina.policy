@@ -12,6 +12,7 @@ grant codeBase "file:${catalina.base}/webapps/share/-" {
     permission java.lang.RuntimePermission "accessDeclaredMembers";
     // Rhino script engine creates a classloader for dynamically compiled scripts
     permission java.lang.RuntimePermission "createClassLoader";
+    permission java.lang.RuntimePermission "getClassLoader";
     permission java.lang.RuntimePermission "getProtectionDomain";
     // any library may check an env setting, especially in a Docker setup
     permission java.lang.RuntimePermission "getenv.*";
@@ -19,7 +20,9 @@ grant codeBase "file:${catalina.base}/webapps/share/-" {
     permission java.net.SocketPermission "*", "connect";
     permission java.security.SecurityPermission "insertProvider.*";
     permission java.security.SecurityPermission "putProviderProperty.*";
-    permission java.util.PropertyPermission "*", "read";
+
+    // change made for SHA-2457 elevated the read permission requirement to read-write
+    permission java.util.PropertyPermission "*", "read,write";
 };
 
 // limited privileges for dropped in JAR extension modules
