@@ -1,0 +1,4 @@
+// any permissions relevant to the OOTBee Support Tools addon
+grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
+    permission java.lang.management.ManagementPermission "monitor";
+};

@@ -199,7 +199,7 @@ then
 
          setInPropertiesFile $LOG4J_FILE "log4j.appender.${key}" ${value}
 
-         if [[ ! $CUSTOM_APPENDER_LIST =~ "^,([^,]+,)*${appenderName}(,[^,$]+)*$" ]]
+         if [[ ! $CUSTOM_APPENDER_LIST =~ ^,([^,]+,)*${appenderName}(,[^,$]+)*$ ]]
          then
             CUSTOM_APPENDER_LIST="${CUSTOM_APPENDER_LIST},${appenderName}"
          fi

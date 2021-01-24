@@ -1,16 +1,15 @@
 FROM ${docker.from.id}-graalvm:${docker.from.version}
 
 # add prepared files that would be too awkward to handle via RUN / sed
-COPY share-config-custom.xml share.xml catalina.policy share-logrotate.d initShare.sh prepareWarFiles.js share-ng.conf page.ctool.admin-console.xml /tmp/
+COPY share-config-custom.xml share.xml policy.d share-logrotate.d initShare.sh prepareWarFiles.js share-ng.conf page.ctool.admin-console.xml /tmp/
 
 # apply our Alfresco Share default configurations
-RUN mv /tmp/share-logrotate.d /etc/logrotate.d/share \
+RUN mv /tmp/*.policy /etc/tomcat8/policy.d/ \
+   && mv /tmp/share-logrotate.d /etc/logrotate.d/share \
    && mkdir -p /srv/alfresco/config/alfresco/web-extension /srv/alfresco/config/alfresco/site-data/components /srv/alfresco/modules /etc/tomcat8/Catalina/localhost \
    && mv /tmp/share-config-custom.xml /srv/alfresco/config/alfresco/web-extension/ \
    && mv /tmp/page.ctool.admin-console.xml /srv/alfresco/config/alfresco/site-data/components/ \
    && mv /tmp/share.xml /etc/tomcat8/Catalina/localhost/ \
-   && cat /tmp/catalina.policy >> /etc/tomcat8/catalina.policy \
-   && rm /tmp/catalina.policy \
    && touch /var/lib/tomcat8/logs/.share-logrotate-dummy \
    && mv /tmp/prepareWarFiles.js /var/lib/tomcat8/ \
    && mv /tmp/share-ng.conf /etc/syslog-ng/conf.d/share-ng.conf \
@@ -27,7 +26,9 @@ ENV MAVEN_REQUIRED_ARTIFACTS= \
    MAVEN_REPOSITORIES_alfresco_URL=https://artifacts.alfresco.com/nexus/content/groups/public \
    MAVEN_REPOSITORIES_alfresco_ee_URL=https://artifacts.alfresco.com/nexus/content/groups/private \
    MAVEN_REPOSITORIES_ossrh_URL=https://oss.sonatype.org/content/repositories/snapshots \
-   JMX_RMI_PORT=5002
+   JMX_RMI_PORT=5002 \
+   JAVA_SECURITY_POLICY_shareBase_FILE=/etc/tomcat8/policy.d/share-base.policy \
+   JAVA_SECURITY_POLICY_shareDocker_FILE=/etc/tomcat8/policy.d/share-docker.policy
 
 # we support /srv/alfresco/keystore and /srv/alfresco/defaultArtifacts but don't want to force a volume to be auto-created if not bound
 

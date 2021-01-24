@@ -1,0 +1,10 @@
+// any permissions relevant to the specific paths / ports in the Acosix Docker Share base image
+grant codeBase "file:\${catalina.base}/webapps/share/-" {
+    // in case any read is performed via file instead of classpath
+    permission java.io.FilePermission "/srv/alfresco/config/-", "read";
+};
+
+// limited privileges for dropped in JAR extension modules
+grant codeBase "file:/srv/alfresco/modules/-" {
+    permission java.io.FilePermission "/srv/alfresco/config/-", "read";
+};

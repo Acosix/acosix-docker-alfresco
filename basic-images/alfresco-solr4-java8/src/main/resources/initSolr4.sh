@@ -82,8 +82,8 @@ then
       mkdir -p /etc/tomcat8/Catalina/localhost
       mv /srv/alfresco-solr4/solrhome/context.xml /etc/tomcat8/Catalina/localhost/solr4.xml
       sed -i 's/@@ALFRESCO_SOLR4_DIR@@/\/srv\/alfresco-solr4\/solrhome/' /etc/tomcat8/Catalina/localhost/solr4.xml
-      sed -i 's/@@ALFRESCO_SOLR4_MODEL_DIR@@/\/srv\/alfresco-solr4\/index\/_models/' /etc/tomcat8/Catalina/localhost/solr4.xml
-      sed -i 's/@@ALFRESCO_SOLR4_CONTENT_DIR@@/\/srv\/alfresco-solr4\/index\/_content/' /etc/tomcat8/Catalina/localhost/solr4.xml
+      sed -i 's/@@ALFRESCO_SOLR4_MODEL_DIR@@/\/srv\/alfresco-solr4\/index\/models/' /etc/tomcat8/Catalina/localhost/solr4.xml
+      sed -i 's/@@ALFRESCO_SOLR4_CONTENT_DIR@@/\/srv\/alfresco-solr4\/index\/content/' /etc/tomcat8/Catalina/localhost/solr4.xml
       sed -i '/<\/Context>/i <Resources>' /etc/tomcat8/Catalina/localhost/solr4.xml
       sed -i '/<\/Context>/i <PostResources base="/srv/alfresco-solr4/modules" className="org.apache.catalina.webresources.DirResourceSet" webAppMount="/WEB-INF/lib" />' /etc/tomcat8/Catalina/localhost/solr4.xml
       sed -i '/<\/Context>/i </Resources>' /etc/tomcat8/Catalina/localhost/solr4.xml
@@ -176,7 +176,7 @@ then
 
          setInPropertiesFile /srv/alfresco-solr4/solrhome/log4j-solr.properties log4j.appender.${key} ${value}
 
-         if [[ ! $CUSTOM_APPENDER_LIST =~ "^,([^,]+,)*${appenderName}(,[^,$]+)*$" ]]
+         if [[ ! $CUSTOM_APPENDER_LIST =~ ^,([^,]+,)*${appenderName}(,[^,$]+)*$ ]]
          then
             CUSTOM_APPENDER_LIST="${CUSTOM_APPENDER_LIST},${appenderName}"
          fi
@@ -267,7 +267,7 @@ then
          fi
 
          # we only apply settings for core configs we created in this run
-         if [[ $NEW_CORE_LIST =~ "^([^,]+,)*${coreName}(,[^,$]+)*$" ]]
+         if [[ $NEW_CORE_LIST =~ ^([^,]+,)*${coreName}(,[^,$]+)*$ ]]
          then
             if grep --quiet "^${key}=" "/srv/alfresco-solr4/solrhome/${coreName}/conf/solrcore.properties"
             then

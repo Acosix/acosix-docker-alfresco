@@ -1,0 +1,24 @@
+// any permissions relevant to the specific paths / ports in the Acosix Docker Repository base image
+grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
+    permission java.io.FilePermission "\${catalina.base}/logs", "read, write";
+    permission java.io.FilePermission "\${catalina.base}/logs/*", "read, write";
+
+    // in case any read is performed via file instead of classpath
+    permission java.io.FilePermission "/srv/alfresco/config/-", "read";
+    // should be a mounted volume / folder for contentstore(s) and any other persistent data
+    permission java.io.FilePermission "/srv/alfresco/data/-", "read,write,delete";
+
+    // allow FTP (active), inboundSMTP, and FTP (passive)
+    permission java.net.SocketPermission "localhost:10021", "listen";
+    permission java.net.SocketPermission "localhost:10025", "listen";
+    permission java.net.SocketPermission "localhost:11000-11099", "listen";
+
+    // in older Alfresco version WSServletContextListener looks this up
+    permission java.io.FilePermission "/var/lib/tomcat8/basename", "read";
+};
+
+// limited privileges for dropped in JAR extension modules
+grant codeBase "file:/srv/alfresco/modules/-" {
+    permission java.io.FilePermission "/srv/alfresco/config/-", "read";
+    permission java.io.FilePermission "/srv/alfresco/data/-", "read,write,delete";
+};

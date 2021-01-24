@@ -3,17 +3,16 @@ FROM ${docker.from.id}-openjdk:${docker.from.version}
 # no local transformation tooling (Java 11 only relevant for Alfresco 6.1.2+ which can use remote transformers - though CE 6.1.2 GA requires backport of remote transformer client)
 
 # add prepared files that would be too awkward to handle via RUN / sed
-COPY *.jar alfresco.xml ROOT.xml _vti_bin.xml api-explorer.xml catalina.policy alfresco-logrotate.d initAlfresco.sh prepareWarFiles.js alfresco-ng.conf repository-config /tmp/
+COPY *.jar alfresco.xml ROOT.xml _vti_bin.xml api-explorer.xml policy.d alfresco-logrotate.d initAlfresco.sh prepareWarFiles.js alfresco-ng.conf repository-config /tmp/
 
 # apply our Alfresco Repository default configurations
 RUN mkdir -p /srv/alfresco/config /srv/alfresco/modules /etc/tomcat8/Catalina/localhost \
+   && mv /tmp/*.policy /etc/tomcat8/policy.d/ \
    && mv /tmp/*.jar /srv/alfresco/modules/ \
    && mv /tmp/alfresco-global.properties /srv/alfresco/config/ \
    && mv /tmp/alfresco /srv/alfresco/config/ \
    && find /srv/alfresco/config -type d -exec chmod +x '{}' \; \
    && mv /tmp/*.xml /etc/tomcat8/Catalina/localhost/ \
-   && cat /tmp/catalina.policy >> /etc/tomcat8/catalina.policy \
-   && rm /tmp/catalina.policy \
    && mv /tmp/alfresco-logrotate.d /etc/logrotate.d/alfresco \
    && touch /var/lib/tomcat8/logs/.alfresco-logrotate-dummy \
    && mv /tmp/prepareWarFiles.js /var/lib/tomcat8/ \
@@ -47,7 +46,10 @@ ENV MAVEN_REQUIRED_ARTIFACTS= \
    MAVEN_REPOSITORIES_alfresco_URL=https://artifacts.alfresco.com/nexus/content/groups/public \
    MAVEN_REPOSITORIES_alfresco_ee_URL=https://artifacts.alfresco.com/nexus/content/groups/private \
    MAVEN_REPOSITORIES_ossrh_URL=https://oss.sonatype.org/content/repositories/snapshots \
-   JMX_RMI_PORT=5001
+   JMX_RMI_PORT=5001 \
+   JAVA_SECURITY_POLICY_alfrescoBase_FILE=/etc/tomcat8/policy.d/alfresco-base.policy \
+   JAVA_SECURITY_POLICY_alfrescoDocker_FILE=/etc/tomcat8/policy.d/alfresco-docker.policy \
+   JAVA_SECURITY_POLICY_ootbeeSupportTools_FILE=/etc/tomcat8/policy.d/alfresco-support-tools.policy
 
 LABEL vendor="${docker.labels.vendor}" \
    ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \

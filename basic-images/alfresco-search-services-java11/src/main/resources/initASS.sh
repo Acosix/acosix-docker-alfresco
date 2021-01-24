@@ -16,7 +16,7 @@ setInPropertiesFile() {
       echo "Replacing existing entry for ${key} in ${fileName}" > /proc/1/fd/1
       sed -i -r "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
    else
-      echo "adding new entry for ${key} to ${fileName}" > /proc/1/fd/1
+      echo "Adding new entry for ${key} to ${fileName}" > /proc/1/fd/1
       echo "${key}=${value}" >> ${fileName}
    fi
 }
@@ -111,7 +111,7 @@ then
 
          setInPropertiesFile /var/lib/alfresco-search-services/logs/log4j.properties log4j.appender.${key} ${value}
 
-         if [[ ! $CUSTOM_APPENDER_LIST =~ "^,([^,]+,)*${appenderName}(,[^,$]+)*$" ]]
+         if [[ ! $CUSTOM_APPENDER_LIST =~ ^,([^,]+,)*${appenderName}(,[^,$]+)*$ ]]
          then
             CUSTOM_APPENDER_LIST="${CUSTOM_APPENDER_LIST},${appenderName}"
          fi
@@ -218,7 +218,7 @@ then
          fi
 
          # we only apply settings for core configs we created in this run
-         if [[ $NEW_CORE_LIST =~ "^([^,]+,)*${coreName}(,[^,$]+)*$" ]]
+         if [[ $NEW_CORE_LIST =~ ^([^,]+,)*${coreName}(,[^,$]+)*$ ]]
          then
             setInPropertiesFile /srv/alfresco-search-services/solrhome/${coreName}/conf/solrcore.properties ${valueKey} ${value}
          fi

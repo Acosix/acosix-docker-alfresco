@@ -28,9 +28,11 @@ ENV MAVEN_REQUIRED_ARTIFACTS= \
 
 EXPOSE 8080 8081 8082 8083 5003
 
-# having SOLR core configurations in an externalised volume is optional - index is expected to be always externalised
-# we also support /srv/alfresco-solr4/defaultArtifacts but don't want to force a volume to be auto-created if not bound
-VOLUME ["/srv/alfresco-solr4/index", "/srv/alfresco-solr4/coreConfigs", "/srv/alfresco-solr4/keystore"]
+# having SOLR core configurations in an externalised volume on is optional
+# index is expected to be always externalised
+# we support /srv/alfresco-solr4/defaultArtifacts, /srv/alfresco-solr4/coreConfigs
+# and /srv/alfresco-solr4/keystore but don't want to force a volume
+VOLUME ["/srv/alfresco-solr4/index" ]
 
 LABEL vendor="${docker.labels.vendor}" \
    ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \

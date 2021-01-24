@@ -1,13 +1,8 @@
-
-grant codeBase "file:${catalina.base}/webapps/share/-" {
+// any permissions relevant for most Alfresco Share versions
+grant codeBase "file:\${catalina.base}/webapps/share/-" {
     // template loader looks up from server root somehow
-    permission java.io.FilePermission "${catalina.base}", "read";
-    permission java.io.FilePermission "${catalina.base}/logs", "read";
-    permission java.io.FilePermission "${catalina.base}/logs/-", "read,write,delete";
-    permission java.io.FilePermission "\${java.io.tmpdir}", "read";
-    permission java.io.FilePermission "\${java.io.tmpdir}/-", "read,write,delete";
-    // in case any read is performed via file instead of classpath
-    permission java.io.FilePermission "/srv/alfresco/config/-", "read";
+    permission java.io.FilePermission "\${catalina.base}", "read";
+
     // some reflection may be necessary (e.g. to apply patches to Alfresco code with restricted visibility)
     permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
     permission java.lang.RuntimePermission "accessClassInPackage.*";
@@ -16,24 +11,24 @@ grant codeBase "file:${catalina.base}/webapps/share/-" {
     permission java.lang.RuntimePermission "createClassLoader";
     permission java.lang.RuntimePermission "getClassLoader";
     permission java.lang.RuntimePermission "getProtectionDomain";
-    // any library may check an env setting, especially in a Docker setup
+    // any library may check an env setting
     permission java.lang.RuntimePermission "getenv.*";
+
     permission java.net.NetPermission "specifyStreamHandler";
     permission java.net.SocketPermission "*", "connect";
+
     permission java.security.SecurityPermission "insertProvider.*";
     permission java.security.SecurityPermission "putProviderProperty.*";
+
     permission java.util.PropertyPermission "*", "read";
 };
 
 // limited privileges for dropped in JAR extension modules
-// extension modules could require arbitrary permissions - we can't predict, so keep to a sane/safe default
-// policy could be expanded in a derived image, or extensions be added to webapp with its more extensive policy
 grant codeBase "file:/srv/alfresco/modules/-" {
-    permission java.io.FilePermission "\${java.io.tmpdir}/-", "read,write,delete";
-    permission java.io.FilePermission "/srv/alfresco/config/-", "read";
     permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
     permission java.lang.RuntimePermission "accessClassInPackage.*";
     permission java.lang.RuntimePermission "accessDeclaredMembers";
     permission java.net.SocketPermission "*", "connect";
+
     permission java.util.PropertyPermission "*", "read";
 };
