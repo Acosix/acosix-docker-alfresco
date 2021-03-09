@@ -5,7 +5,7 @@
     <parent>
         <groupId>de.acosix.docker.alfresco</groupId>
         <artifactId>acosix-docker-alfresco-basic-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>20210309</version>
     </parent>
 
     <artifactId>alfresco-search-services-java8</artifactId>
