@@ -27,11 +27,10 @@ setInPropertiesFile() {
 
    # escape typical special characters in key / value (. and / for dot-separated keys or path values)
    regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
-   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
    replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
 
-   if grep --quiet -E "^#?${regexSafeKey}=" ${fileName}; then
-      sed -i -r "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
+   if grep --quiet -E "^#?${regexSafeKey}\s*=" ${fileName}; then
+      sed -ri "s/^#?(${regexSafeKey}\s*=)[^$]*/\1${replacementSafeValue}/" ${fileName}
    else
       echo "${key}=${value}" >> ${fileName}
    fi

@@ -27,11 +27,10 @@ setInPropertiesFile() {
 
    # escape typical special characters in key / value (. and / for dot-separated keys or path values)
    regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
-   replacementSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
    replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
 
-   if grep --quiet -E "^#?${regexSafeKey}=" ${fileName}; then
-      sed -i -r "s/^#?${regexSafeKey}=.*/${replacementSafeKey}=${replacementSafeValue}/" ${fileName}
+   if grep --quiet -E "^#?${regexSafeKey}\s*=" ${fileName}; then
+      sed -ri "s/^#?(${regexSafeKey}\s*=)[^$]*/\1${replacementSafeValue}/" ${fileName}
    else
       echo "${key}=${value}" >> ${fileName}
    fi
@@ -91,7 +90,7 @@ then
       sed -i 's/File=solr\.log/File=\${catalina.base}\/logs\/solr.log/' /srv/alfresco-solr4/solrhome/log4j-solr.properties
 
       echo "Preparing home, content store, index" > /proc/1/fd/1
-      if [[ -z "$(ls -A /srv/alfresco-solr4/solrhome/templates/rerank)" && -z "$(ls -A /srv/alfresco-solr4/solrhome/templates/vanilla)" ]]
+      if [[ ! -d '/srv/alfresco-solr4/solrhome/templates/rerank' && ! -d '/srv/alfresco-solr4/solrhome/templates/vanilla' ]]
       then
          # old SOLR 4 version may not provide any templates
          echo "SOLR 4 version does not provide usable core templates - using default workspace-SpacesStore config as vanilla template"
@@ -206,7 +205,7 @@ then
       then
          echo "Setting up SOLR 4 core ${core}"
          
-         if [[ -z "$(ls -A /srv/alfresco-solr4/solrhome/templates/rerank)" ]]
+         if [[ ! -d '/srv/alfresco-solr4/solrhome/templates/rerank' ]]
          then
             cp -r /srv/alfresco-solr4/solrhome/templates/vanilla "/srv/alfresco-solr4/coreConfigs/${core}"
          else
@@ -279,7 +278,7 @@ then
             fi
          fi
       fi
-      if [[ $i == SHARED_* ]]
+      if [[ $i == SHARED_* && -f /srv/alfresco-solr4/solrhome/conf/shared.properties ]]
       then
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
          value=`echo "$i" | cut -d '=' -f 2-`
