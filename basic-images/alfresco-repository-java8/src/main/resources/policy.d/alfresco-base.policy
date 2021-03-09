@@ -4,6 +4,7 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission java.io.FilePermission "/usr/bin/*", "read,execute";
     permission java.io.FilePermission "/usr/local/bin/*", "read,execute";
     // OfficeUtils.findOfficeHome checks various common paths to find soffice
+    permission java.io.FilePermission "/usr/sbin/soffice", "read,execute";
     permission java.io.FilePermission "/sbin/soffice", "read,execute";
     permission java.io.FilePermission "/bin/soffice", "read,execute";
     permission java.io.FilePermission "/usr/lib/openoffice", "read";
