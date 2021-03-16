@@ -12,7 +12,7 @@
 
     <properties>
         <docker.from.name>baseimage-java11</docker.from.name>
-        <docker.from.version>1.0.0-SNAPSHOT</docker.from.version>
+        <docker.from.version>20210309</docker.from.version>
     </properties>
 
     <build>
