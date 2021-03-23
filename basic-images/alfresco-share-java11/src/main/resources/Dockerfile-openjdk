@@ -20,7 +20,7 @@ EXPOSE 8080 8081 5002 8000
 
 ENV MAVEN_REQUIRED_ARTIFACTS= \
    ALFRESCO_MMT_VERSION=6.0 \
-   ALFRESCO_SHARE_VERSION=6.2.0 \
+   ALFRESCO_SHARE_VERSION=7.0.0 \
    MAVEN_ACTIVE_REPOSITORIES=alfresco,alfresco_ee,central,ossrh \
    MAVEN_REPOSITORIES_central_URL=https://repo1.maven.org/maven2 \
    MAVEN_REPOSITORIES_alfresco_URL=https://artifacts.alfresco.com/nexus/content/groups/public \

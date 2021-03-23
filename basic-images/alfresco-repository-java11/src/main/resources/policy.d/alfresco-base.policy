@@ -1,5 +1,13 @@
 // any permissions relevant for most Alfresco versions
 grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
+    // template loader looks up from server root somehow
+    permission java.io.FilePermission "\${catalina.base}", "read";
+    permission java.io.FilePermission "\${catalina.base}/logs", "read";
+    permission java.io.FilePermission "\${catalina.base}/logs/*", "read,write";
+
+    permission java.io.FilePermission "\${java.io.tmpdir}", "read";
+    permission java.io.FilePermission "\${java.io.tmpdir}/-", "read,write,delete";
+
     // common / legacy transformers
     permission java.io.FilePermission "/usr/bin/*", "read,execute";
     permission java.io.FilePermission "/usr/local/bin/*", "read,execute";
@@ -22,6 +30,31 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     // default lookup in library (could be changed via -Dorg.quartz.properties=)
     permission java.io.FilePermission "quartz.properties", "read";
 
+    permission java.io.FilePermission "cxf.xml", "read";
+
+    // default lookup in library (could be changed via -Dspy.properties=)
+    permission java.io.FilePermission "spy.properties", "read";
+
+    // For a fallback in org.alfresco.xmlfactory.FactoryHelper#getConfiguration
+    // unlike the straight property read just lines before, there is no catch for SecurityException
+    permission java.io.FilePermission "\${java.home}/lib/javax.xml.parsers.SAXParserFactory.properties", "read";
+    permission java.io.FilePermission "\${java.home}/lib/javax.xml.parsers.DocumentBuilderFactory.properties", "read";
+    // Xerces + Xalan lib can live with that, but also no issue allowing this (makes security debugging easier due to less clutter as it's used extensively via Spring)
+    permission java.io.FilePermission "\${java.home}/lib/xerces.properties", "read";
+    permission java.io.FilePermission "\${java.home}/lib/xalan.properties", "read";
+
+    // javax.activation.MimetypesFileTypeMap
+    permission java.io.FilePermission "\${java.home}/conf", "read";
+    permission java.io.FilePermission "\${java.home}/conf/mime.types", "read";
+    permission java.io.FilePermission "\${java.home}/lib/mime.types", "read";
+
+    // in older Alfresco version WSServletContextListener looks this up
+    permission java.io.FilePermission "\${catalina.base}//basename", "read";
+    permission java.io.FilePermission "\${catalina.base}//xcatalog", "read";
+    // Activiti ExpressionFactoryImpl does not cache SecurityException
+    // only checks -Djavax.el.ExpressionFactory as fallback
+    permission java.io.FilePermission "\${java.home}/lib/el.properties", "read";
+
     // ImporterBootstrap tries file lookup (unlikely match) before checking for classpath (most common case)
     // don't want to allow everything, so restrict to alfresco/* paths
     permission java.io.FilePermission "alfresco/-", "read";
@@ -39,6 +72,7 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission java.lang.RuntimePermission "getClassLoader";
     permission java.lang.RuntimePermission "getProtectionDomain";
     permission java.lang.RuntimePermission "getStackWalkerWithClassReference";
+    permission java.lang.RuntimePermission "reflectionFactoryAccess";
     // any library may check an env setting
     permission java.lang.RuntimePermission "getenv.*";
     permission java.lang.RuntimePermission "modifyThread";
@@ -50,8 +84,10 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     // looks like this is used for dynamic client ports in Apache HTTP Client connections
     permission java.net.SocketPermission "localhost:0", "listen,resolve";
 
+    permission java.security.SecurityPermission "insertProvider";
     permission java.security.SecurityPermission "insertProvider.*";
     permission java.security.SecurityPermission "putProviderProperty.*";
+    permission java.security.SecurityPermission "getProperty.org.bouncycastle.*";
 
     // read,write required due to DescriptorStartupLog (excessive - should be patched/removed to limit to read-only)
     permission java.util.PropertyPermission "*", "read,write";
@@ -61,11 +97,20 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
 
     // Apache Camel (used for ActiveMQ) may want to create an mbean server if no existing is found
     // also necessary for any Alfresco JMX beans
-    permission javax.management.MBeanServerPermission "createMBeanServer";
-    permission javax.management.MBeanServerPermission "findMBeanServer";
-    permission javax.management.MBeanPermission "org.alfresco.*#-[*:*]", "registerMBean";
-    permission javax.management.MBeanPermission "org.alfresco.*#-[*:*]", "unregisterMBean";
-    permission javax.management.MBeanPermission "org.alfresco.*#-[*:*]", "invoke";
+    permission javax.management.MBeanServerPermission "createMBeanServer,findMBeanServer";
+    permission javax.management.MBeanPermission "org.alfresco.*#-[*:*]", "*";
+    permission javax.management.MBeanPermission "org.apache.camel.*#-[*:*]", "*";
+    // via Camel DefaultManagementMBeanAssembler
+    permission javax.management.MBeanPermission "javax.management.modelmbean.RequiredModelMBean#-[-]", "instantiate";
+    // X509ServletFilterBase queries all if it cannot find Catalina Engine with direct access
+    permission javax.management.MBeanPermission "org.apache.catalina.mbeans.*#-[-]", "queryNames,getAttribute";
+    permission javax.management.MBeanPermission "org.apache.tomcat.util.modeler.BaseModelMBean#-[-]", "queryNames,getAttribute";
+
+    permission javax.management.MBeanTrustPermission "register";
+
+    // duplicated from p6spy as it is checked against Spring due to its use of doPrivileged
+    permission javax.management.MBeanPermission "-#-[-]", "queryNames";
+    permission javax.management.MBeanPermission "com.p6spy.engine.*#-[*:*]", "*";
 
     // custom Apache ibats/Commons OGNL
     // not sure if all are needed, but those packages are used in ibatis configs
@@ -75,14 +120,7 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.ibatis.*";
     permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.repo.*";
     permission org.apache.ibatis.ognl.OgnlInvokePermission  "invoke.org.alfresco.util.*";
-};
 
-// limited privileges for dropped in JAR extension modules
-grant codeBase "file:/srv/alfresco/modules/-" {
-    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
-    permission java.lang.RuntimePermission "accessClassInPackage.*";
-    permission java.lang.RuntimePermission "accessDeclaredMembers";
-    permission java.net.SocketPermission "*", "connect";
-
-    permission java.util.PropertyPermission "*", "read";
+    // CmisWebServicesServlet
+    permission javax.xml.ws.WebServicePermission "publishEndpoint";
 };

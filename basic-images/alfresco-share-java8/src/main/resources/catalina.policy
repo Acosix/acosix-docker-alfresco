@@ -3,7 +3,8 @@ grant codeBase "file:${catalina.base}/webapps/share/-" {
     // template loader looks up from server root somehow
     permission java.io.FilePermission "${catalina.base}", "read";
     permission java.io.FilePermission "${catalina.base}/logs", "read";
-    permission java.io.FilePermission "${catalina.base}/logs/-", "read,write,delete";
+    permission java.io.FilePermission "${catalina.base}/logs/-", "read,write";
+
     permission java.io.FilePermission "\${java.io.tmpdir}", "read";
     permission java.io.FilePermission "\${java.io.tmpdir}/-", "read,write,delete";
     // in case any read is performed via file instead of classpath

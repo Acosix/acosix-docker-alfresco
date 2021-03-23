@@ -5,15 +5,16 @@
     <parent>
         <groupId>de.acosix.docker.alfresco</groupId>
         <artifactId>acosix-docker-alfresco-basic-parent</artifactId>
-        <version>20210309</version>
+        <version>20210323</version>
     </parent>
 
     <artifactId>alfresco-repository-java8</artifactId>
 
     <properties>
         <docker.from.name>baseimage-tomcat8-java8</docker.from.name>
-        <docker.from.version>20210309</docker.from.version>
+        <docker.from.version>20210321</docker.from.version>
         <imagemagick.version>7.0.11-3</imagemagick.version>
+        <p6spy.version>3.9.1</p6spy.version>
     </properties>
 
     <dependencies>
@@ -21,6 +22,19 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.2.19</version>
+            <type>jar</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.checkerframework</groupId>
+                    <artifactId>checker-qual</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>p6spy</groupId>
+            <artifactId>p6spy</artifactId>
+            <version>${p6spy.version}</version>
             <type>jar</type>
         </dependency>
 

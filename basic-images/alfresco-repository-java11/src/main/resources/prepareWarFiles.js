@@ -410,17 +410,24 @@ function installArtifacts(platformWar, mmtJar, artifactsToInstall)
 
 function main()
 {
-   var alfrescoVersions, alfrescoArtifacts, repositories, artifacts, requiredAlfrescoArtifacts, artifactsToInstall;
+   var alfrescoVersions, alfrescoBorkedPlatformVersionMap, alfrescoArtifacts, repositories, artifacts, requiredAlfrescoArtifacts, artifactsToInstall;
    
    alfrescoVersions = {
-      platform : envOr('ALFRESCO_PLATFORM_VERSION', '6.0.7-ga'),
-      aos : envOr('ALFRESCO_AOS_VERSION', '1.1.6'),
-      vtiBin : envOr('ALFRESCO_VTI_BIN_VERSION', '1.1.5'),
+      platform : envOr('ALFRESCO_PLATFORM_VERSION', '7.0.0-ga'),
+      aos : envOr('ALFRESCO_AOS_VERSION', '1.4.0'),
+      vtiBin : envOr('ALFRESCO_VTI_BIN_VERSION', '1.4.0'),
       mmt : envOr('ALFRESCO_MMT_VERSION', '6.0'),
-      root : envOr('ALFRESCO_ROOT_VERSION', '6.0'),
-      shareServices : envOr('ALFRESCO_SHARE_SERVICES_VERSION', '6.0.c'),
-      apiExplorer : envOr('ALFRESCO_API_EXPLORER_VERSION', '6.0.7-ga')
+      root : envOr('ALFRESCO_ROOT_VERSION', '6.0.1'),
+      shareServices : envOr('ALFRESCO_SHARE_SERVICES_VERSION', '7.0.0'),
+      apiExplorer : envOr('ALFRESCO_API_EXPLORER_VERSION', '7.0.0')
    };
+
+   // since ACS 7.0 platform WAR versions are borked as only the Docker-oriented packaging project has the proper version
+   // we support a 7.0.0-ga "fake" version for consistency with previous versions
+   alfrescoBorkedPlatformVersionMap = {
+      '7.0.0-ga': '8.423'
+   };
+   alfrescoVersions.platform = alfrescoBorkedPlatformVersionMap[alfrescoVersions.platform] || alfrescoVersions.platform;
    
    alfrescoArtifacts = {
       mmtJar : parseArtifactCoordinates('org.alfresco:alfresco-mmt:jar:' + alfrescoVersions.mmt),

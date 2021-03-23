@@ -5,12 +5,11 @@
     <parent>
         <groupId>de.acosix.docker.alfresco</groupId>
         <artifactId>acosix-docker-alfresco-parent</artifactId>
-        <version>20210309</version>
+        <version>20210323</version>
     </parent>
 
     <groupId>de.acosix.docker.alfresco</groupId>
     <artifactId>acosix-docker-alfresco-specific-parent</artifactId>
-    <version>20210309</version>
     <packaging>pom</packaging>
 
     <properties>

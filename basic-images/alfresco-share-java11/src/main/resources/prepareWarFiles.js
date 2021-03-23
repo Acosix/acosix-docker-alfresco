@@ -414,7 +414,7 @@ function main()
    
    alfrescoVersions = {
       mmt : envOr('ALFRESCO_MMT_VERSION', '6.0'),
-      share : envOr('ALFRESCO_SHARE_VERSION', '6.0.c')
+      share : envOr('ALFRESCO_SHARE_VERSION', '7.0.0')
    };
    
    alfrescoArtifacts = {

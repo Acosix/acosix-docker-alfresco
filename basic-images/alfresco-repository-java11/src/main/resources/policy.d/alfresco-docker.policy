@@ -1,24 +1,48 @@
 // any permissions relevant to the specific paths / ports in the Acosix Docker Repository base image
 grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
-    permission java.io.FilePermission "\${catalina.base}/logs", "read, write";
-    permission java.io.FilePermission "\${catalina.base}/logs/*", "read, write";
-
     // in case any read is performed via file instead of classpath
     permission java.io.FilePermission "/srv/alfresco/config/-", "read";
     // should be a mounted volume / folder for contentstore(s) and any other persistent data
     permission java.io.FilePermission "/srv/alfresco/data/-", "read,write,delete";
 
+    permission java.io.FilePermission "/srv/alfresco/keystore/-", "read";
+
     // allow FTP (active), inboundSMTP, and FTP (passive)
     permission java.net.SocketPermission "localhost:10021", "listen";
     permission java.net.SocketPermission "localhost:10025", "listen";
     permission java.net.SocketPermission "localhost:11000-11099", "listen";
-
-    // in older Alfresco version WSServletContextListener looks this up
-    permission java.io.FilePermission "/var/lib/tomcat8/basename", "read";
 };
 
 // limited privileges for dropped in JAR extension modules
 grant codeBase "file:/srv/alfresco/modules/-" {
+    permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
+    permission java.lang.RuntimePermission "accessClassInPackage.*";
+    permission java.lang.RuntimePermission "accessDeclaredMembers";
+    permission java.net.SocketPermission "*", "connect";
+
+    permission java.util.PropertyPermission "*", "read";
+
     permission java.io.FilePermission "/srv/alfresco/config/-", "read";
     permission java.io.FilePermission "/srv/alfresco/data/-", "read,write,delete";
+};
+
+// unfortunately P6Spy reads environment variables and properties unselectively, interacts with JMX
+grant codeBase "file:/srv/alfresco/modules/p6spy-${p6spy.version}.jar" {
+    permission java.lang.RuntimePermission "getenv.*";
+    permission java.util.PropertyPermission "*", "read,write";
+
+    // default lookup in library (could be changed via -Dspy.properties=)
+    permission java.io.FilePermission "spy.properties", "read";
+
+    // if enabled P6Spy may be first to use classpath lookup, requiring ability to specify stream handler
+    permission java.net.NetPermission "specifyStreamHandler";
+
+    // for some reason, disabling jmx via spy.properties does not work
+    permission javax.management.MBeanServerPermission "createMBeanServer,findMBeanServer";
+
+    // note: actually required by p6spy, but due to doPrivileged use in Spring actually checked against webapp domain (duplicated there)
+    permission javax.management.MBeanPermission "-#-[-]", "queryNames";
+    permission javax.management.MBeanPermission "com.p6spy.engine.*#-[*:*]", "*";
+
+    permission javax.management.MBeanTrustPermission "register";
 };

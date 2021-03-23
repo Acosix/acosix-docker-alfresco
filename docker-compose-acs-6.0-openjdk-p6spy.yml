@@ -1,0 +1,144 @@
+version: '3.3'
+
+services:
+   postgres:
+      image: acosix/baseimage-postgresql:20210319
+      hostname: postgres
+      volumes:
+        - pgsql:/srv/postgresql
+      networks:
+         backends:
+            aliases:
+              - postgres
+      environment:
+        - PG_PASS=local-dev
+        - PGCONF_max_connections=200
+        - PGCONF_track_io_timing=on
+        - PG_USER_alfresco=alfresco
+        - PG_PASS_alfresco=alfresco
+        - PG_DB_alfresco=alfresco
+      restart: unless-stopped
+
+   repository:
+      image: acosix/alfresco-repository-java8-openjdk:latest
+      hostname: repository
+      depends_on:
+        - postgres
+        - activemq
+      volumes:
+        - contentstore:/srv/alfresco/data
+        - keystore:/srv/alfresco/keystore
+      networks:
+         backends:
+            aliases:
+              - repository
+      environment:
+        - JAVA_XMS=2G
+        - JAVA_XMX=2G
+        #- JAVA_OPTS=-Duser.timezone=UTC -Djava.security.debug=access,failure
+        - JAVA_OPTS=-Duser.timezone=UTC
+        - POSTGRES_ENABLED=true
+        - DB_HOST=postgres
+        - P6SPY_ENABLED=true
+        - SOLR_HOST=solr
+        - SOLR_PORT=8983
+        - SEARCH_SUBSYSTEM=solr6
+        - PROXY_NAME=localhost
+        - PROXY_PORT=80
+        - SHARE_PROXY_NAME=localhost
+        - SHARE_PROXY_PORT=80
+        - INIT_KEYSTORE_FROM_DEFAULT=false
+        - GENERATE_METADATA_KEYSTORE=true
+        - INSTALL_AOS=true
+        - INSTALL_SHARE_SERVICES=true
+        - INSTALL_API_EXPLORER=true
+        - D_metadata-keystore.password=insecureJustForTest
+        - D_metadata-keystore.metadata.password=insecureJustForTest
+        - GLOBAL_messaging.broker.url=failover:(nio://activemq:61616)?timeout=3000&jms.useCompression=true
+      restart: unless-stopped
+
+   share:
+      image: acosix/alfresco-share-java8-openjdk:latest
+      hostname: share
+      networks:
+         backends:
+            aliases:
+              - share
+      environment:
+        #- JAVA_OPTS=-Duser.timezone=UTC -Djava.security.debug=access,failure
+        - JAVA_OPTS=-Duser.timezone=UTC
+        - PROXY_NAME=localhost
+        - PROXY_PORT=80
+        - REPOSITORY_HOST=repository
+        - REPOSITORY_PORT=8080
+        - PUBLIC_REPOSITORY_HOST=localhost
+        - PUBLIC_REPOSITORY_PORT=80
+        - JAVA_XMS=512M
+        - JAVA_XMX=512M
+      restart: unless-stopped
+
+   solr:
+      image: acosix/alfresco-search-services-java8-openjdk:latest
+      hostname: solr
+      volumes:
+        - index:/srv/alfresco-search-services/index
+        - solrHome:/srv/alfresco-search-services/coreConfigs
+      networks:
+         backends:
+            aliases:
+              - solr
+      environment:
+        - SOLR_HOST=solr
+        - REPOSITORY_HOST=repository
+        - REPOSITORY_PORT=8080
+        - REPOSITORY_SSL_PORT=8081
+        - ENABLED_CORES=alfresco,archive
+        - "SOLR_JAVA_MEM=\"-Xms1G -Xmx1G\""
+        - SHARED_alfresco.cross.locale.datatype.0={http://www.alfresco.org/model/dictionary/1.0}text
+        - SHARED_alfresco.cross.locale.datatype.1={http://www.alfresco.org/model/dictionary/1.0}content
+      restart: unless-stopped
+
+   activemq:
+      image: alfresco/alfresco-activemq:5.16.1
+      hostname: activemq
+      networks:
+         backends:
+            aliases:
+              - activemq
+      restart: unless-stopped
+
+   apache:
+      image: acosix/baseimage-apache:20210319
+      ports:
+        - 80:80
+      networks:
+        - backends
+      environment:
+        - PUBLIC_HOST=localhost
+        - ENABLE_SSL=false
+        - FORCE_SSL=false
+        - LETSENCRYPT_MAIL=webmaster@localhost
+        - WEBMASTER_MAIL=webmaster@localhost
+        - BASE_SAMPLE_HOST=alfresco-universal
+        # needed to deal with Share's first load delay'
+        - APACHE2_CONF_TIMEOUT=120
+        - VHOST_ENABLE_AlfrescoShare=true
+        - VHOST_ENABLE_AlfrescoShareDefault=true
+        - VHOST_ENABLE_AlfrescoAOS=true
+        - VHOST_REPOSITORY_HOST=repository
+        - VHOST_REPOSITORY_PORT=8080
+        - VHOST_REPOSITORY_SSL_PORT=8081
+        - VHOST_SHARE_HOST=share
+        - VHOST_SHARE_PORT=8080
+        - VHOST_SHARE_SSL_PORT=8081
+      restart: unless-stopped
+
+volumes:
+   pgsql:
+   contentstore:
+   keystore:
+   index:
+   solrHome:
+
+networks:
+   backends:

@@ -6,17 +6,38 @@ file_env() {
    local var="$1"
    local fileVar="${var}_FILE"
    local def="${2:-}"
-   if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
-      echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
-      exit 1
-   fi
+
    local val="$def"
-   if [ "${!var:-}" ]; then
-      val="${!var}"
-   elif [ "${!fileVar:-}" ]; then
-      val="$(< "${!fileVar}")"
+   # Alfresco config variables can have dots in them - while allowed for environment variable identifiers, variable substitution in bash (and other shells) does not support it
+   if [[ ${var} =~ '.' ]]; then
+      local varV=`env | grep "${var}=" | cut -d '=' -f 2- || true`
+      local fileVarV=`env | grep "${fileVar}=" | cut -d '=' -f 2- || true`
+
+      if [ "${varV:-}" ] && [ "${fileVarV:-}" ]; then
+         echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
+         exit 1
+      fi
+
+      if [ "${varV:-}" ]; then
+         val="${varV}"
+      elif [ "${fileVarV:-}" ]; then
+         val="$(< "${fileVarV}")"
+      fi
+      env -u "${fileVar}" > /dev/null
+   else
+      if [ "${!var:-}" ] && [ "${!fileVar:-}" ]; then
+         echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
+         exit 1
+      fi
+
+      if [ "${!var:-}" ]; then
+         val="${!var}"
+      elif [ "${!fileVar:-}" ]; then
+         val="$(< "${!fileVar}")"
+      fi
+      unset "$fileVar"
    fi
-   unset "$fileVar"
+
    echo "$val"
 }
 
@@ -47,6 +68,7 @@ MYSQL_ENABLED=${MYSQL_ENABLED:-false}
 DB2_ENABLED=${DB2_ENABLED:-false}
 MSSQL_ENABLED=${MSSQL_ENABLED:-false}
 ORACLE_ENABLED=${ORACLE_ENABLED:-false}
+P6SPY_ENABLED=${P6SPY_ENABLED:-false}
 
 ENABLE_SSL_PROXY=${ENABLE_SSL_PROXY:-false}
 PROXY_NAME=${PROXY_NAME:-localhost}
@@ -72,10 +94,12 @@ SOLR_SSL_PORT=${SOLR_SSL_PORT:-443}
 ACCESS_SOLR_VIA_SSL=${ACCESS_SOLR_VIA_SSL:-false}
 
 REQUIRED_ARTIFACTS=${MAVEN_REQUIRED_ARTIFACTS:-''}
-PLATFORM_VERSION=${ALFRESCO_PLATFORM_VERSION:-5.2.g}
+PLATFORM_VERSION=${ALFRESCO_PLATFORM_VERSION:-7.0.0-ga}
 LEGACY_SUPPORT_TOOLS_INSTALLED=${ALFRESCO_SUPPORT_TOOLS_INSTALLED:-false}
 
 INIT_KEYSTORE_FROM_DEFAULT=${INIT_KEYSTORE_FROM_DEFAULT:-true}
+GENERATE_METADATA_KEYSTORE=${GENERATE_METADATA_KEYSTORE:-false}
+SUPPORT_LEGACY_METADATA_KEYSTORE=${SUPPORT_LEGACY_METADATA_KEYSTORE:-false}
 
 ALFRESCO_ADMIN_PASSWORD=$(file_env ALFRESCO_ADMIN_PASSWORD admin)
 
@@ -159,9 +183,16 @@ then
       echo "Setting up to use Oracle on port ${DB_PORT}" > /proc/1/fd/1
    else
       echo "Type of database to use has not been configured" > /proc/1/fd/1
-        exit 1
+      exit 1
    fi
+
    sed -i "s/${DB_ACT_KEY}//g" /srv/alfresco/config/alfresco-global.properties
+
+   if [[ $P6SPY_ENABLED == true  ]]
+   then
+      sed -i "s/#useP6Spy#//g" /srv/alfresco/config/alfresco-global.properties
+      sed -i "s/${DB_ACT_KEY}//g" /srv/alfresco/config/spy.properties
+   fi
 
    sed -i "s/%DB_HOST%/${DB_HOST}/g" /srv/alfresco/config/alfresco-global.properties
    sed -i "s/%DB_PORT%/${DB_PORT}/g" /srv/alfresco/config/alfresco-global.properties
@@ -216,7 +247,7 @@ then
    sed -i "s/%LOCAL_PORT_PATTERN%/(:(${LOCAL_PORT}|${LOCAL_SSL_PORT}))?/g" /srv/alfresco/config/alfresco-global.properties
 
    echo "Processing environment variables for alfresco-global.properties and dev-log4j.properties" > /proc/1/fd/1
-   CUSTOM_APPENDER_LIST='';
+   CUSTOM_APPENDER_LIST=''
 
    # otherwise for will also cut on whitespace
    IFS=$'\n'
@@ -274,12 +305,21 @@ then
          key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
 
          setInPropertiesFile /srv/alfresco/config/alfresco/extension/dev-log4j.properties "log4j.additivity.${key}" ${value}
+
+      elif [[ $i == P6SPY_* ]]
+      then
+         key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
+         if [[ ! $key == ENABLED ]]
+         then
+            echo "Processing environment variable $i" > /proc/1/fd/1
+            setInPropertiesFile /srv/alfresco/config/spy.properties ${key} ${value}
+         fi
       fi
    done
    sed -i "s/#customAppenderList#/${CUSTOM_APPENDER_LIST}/" /srv/alfresco/config/alfresco/extension/dev-log4j.properties
 
    # either the module is installed explicitly, we have an Enterprise Edition version, or a specific flag is set
-   if [[ $LEGACY_SUPPORT_TOOLS_INSTALLED == true || $REQUIRED_ARTIFACTS =~ '^(.+,)*alfresco-support-tools(,.+)*$' || $PLATFORM_VERSION =~ '^(5\.[2-9]\.\d(\.d)?|[6-9]\.\d\.\d(\.d)?)$' ]]
+   if [[ $LEGACY_SUPPORT_TOOLS_INSTALLED == true || $REQUIRED_ARTIFACTS =~ '^(.+,)*alfresco-support-tools(,.+)*$' || $PLATFORM_VERSION =~ '^(5\.[2-9](\.d)*|[6-9]\.\d\(.\d)*).*$' ]]
    then
       sed -i "s/#withAlfrescoSupportTools#//g" /srv/alfresco/config/alfresco/extension/dev-log4j.properties
    else
@@ -329,20 +369,53 @@ then
    cd /
    rm -rf /tmp/alfresco
 
-   if [[ $INIT_KEYSTORE_FROM_DEFAULT == true && -z "$(ls -A /srv/alfresco/keystore)" ]]
+   if [[ -z "$(ls -A /srv/alfresco/keystore)" ]]
    then
-      echo "Initialising keystore from default" > /proc/1/fd/1
-      unzip -qq /var/lib/tomcat8/webapps/alfresco.war WEB-INF/lib/alfresco-repository-*.jar -d /tmp/alfresco
-      REPO_JAR=$(ls -A /tmp/alfresco/WEB-INF/lib/alfresco-repository-*.jar)
-      unzip -qq "${REPO_JAR}" alfresco/keystore/* -d /tmp/alfresco-repo
-      cp /tmp/alfresco-repo/alfresco/keystore/* /srv/alfresco/keystore/
-      rm -rf /tmp/alfresco /tmp/alfresco-repo
+      if [[ $INIT_KEYSTORE_FROM_DEFAULT == true ]]
+      then
+         unzip -qq /var/lib/tomcat8/webapps/alfresco.war WEB-INF/lib/alfresco-repository-*.jar -d /tmp/alfresco
+         REPO_JAR=$(ls -A /tmp/alfresco/WEB-INF/lib/alfresco-repository-*.jar)
+
+         if grep --quiet "alfresco/keystore" ${REPO_JAR}
+         then
+            echo "Initialising keystore from default" > /proc/1/fd/1
+            unzip -qq "${REPO_JAR}" alfresco/keystore/* -d /tmp/alfresco-repo
+            cp /tmp/alfresco-repo/alfresco/keystore/* /srv/alfresco/keystore/
+         fi
+         rm -rf /tmp/alfresco /tmp/alfresco-repo
+      fi
+
+      if [[ $GENERATE_METADATA_KEYSTORE == true && ! -f '/srv/alfresco/keystore/keystore' ]]
+      then
+         METADATA_KEYSTORE_PASSWORD=$(file_env D_metadata-keystore.password)
+         METADATA_KEY_PASSWORD=$(file_env D_metadata-keystore.metadata.password)
+         if [[ ! -z "$METADATA_KEYSTORE_PASSWORD" && ! -z "$METADATA_KEY_PASSWORD" ]]
+         then
+            echo "Generating metadata encryption keystore" > /proc/1/fd/1
+            mkdir -p /srv/alfresco/keystore
+
+            if [[ $SUPPORT_LEGACY_METADATA_KEYSTORE == true ]]
+            then
+               keytool -genseckey -dname "Alfresco Repository Metadata Encryption" -validity 3650 -alias metadata -keyalg DESede -keystore /srv/alfresco/keystore/keystore -storetype JCEKS -storepass $METADATA_KEYSTORE_PASSWORD -keypass $METADATA_KEY_PASSWORD
+
+               touch /srv/alfresco/keystore/keystore-passwords.properties
+               setInPropertiesFile /srv/alfresco/keystore/keystore-passwords.properties aliases metadata
+               setInPropertiesFile /srv/alfresco/keystore/keystore-passwords.properties keystore.password $METADATA_KEYSTORE_PASSWORD
+               setInPropertiesFile /srv/alfresco/keystore/keystore-passwords.properties metadata.algorithm DESede
+               setInPropertiesFile /srv/alfresco/keystore/keystore-passwords.properties metadata.password $METADATA_KEY_PASSWORD
+            else
+               keytool -genseckey -dname "Alfresco Repository Metadata Encryption" -validity 3650 -alias metadata -keyalg AES -keysize 256 -keystore /srv/alfresco/keystore/keystore -storetype pkcs12 -storepass $METADATA_KEYSTORE_PASSWORD -keypass $METADATA_KEY_PASSWORD
+            fi
+         else
+            echo "Keystore or metadata key password have not been specified via expected environment variable - unable to generate metadata keystore" > /proc/1/fd/1
+         fi
+      fi
    fi
 
-   if [[ -f '/srv/alfresco/keystore/keystore' && -f '/srv/alfresco/keystore/keystore-passwords.properties' ]]
+   if [[ -f '/srv/alfresco/keystore/keystore' ]]
    then
-      echo "Referencing custom keystore" > /proc/1/fd/1
-      sed -i "/^#useCustomKeystore#/d" /srv/alfresco/config/alfresco-global.properties
+      echo "Enabling custom keystore directory" > /proc/1/fd/1
+      sed -i "s/#useCustomKeystore#//" /srv/alfresco/config/alfresco-global.properties
    fi
 
    echo "Setting up raw HTTP connector" > /proc/1/fd/1

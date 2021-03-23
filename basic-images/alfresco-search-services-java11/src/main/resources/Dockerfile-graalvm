@@ -17,7 +17,7 @@ RUN groupadd -g 12001 ass \
    && chmod +x /etc/service/alfresco-search-services/run \
    && chown -R ass:ass /srv/alfresco-search-services
 
-ENV ALFRESCO_ASS_VERSION=1.4.0 \
+ENV ALFRESCO_ASS_VERSION=2.0.1.1 \
    ALFRESCO_ASS_ARTIFACT= \
    MAVEN_ACTIVE_REPOSITORIES=alfresco,alfresco_ee,central,ossrh \
    MAVEN_REPOSITORIES_central_URL=https://repo1.maven.org/maven2 \

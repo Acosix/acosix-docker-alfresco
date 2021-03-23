@@ -9,7 +9,7 @@ COPY *.jar alfresco.xml ROOT.xml _vti_bin.xml api-explorer.xml policy.d alfresco
 RUN mkdir -p /srv/alfresco/config /srv/alfresco/modules /etc/tomcat8/Catalina/localhost \
    && mv /tmp/*.policy /etc/tomcat8/policy.d/ \
    && mv /tmp/*.jar /srv/alfresco/modules/ \
-   && mv /tmp/alfresco-global.properties /srv/alfresco/config/ \
+   && mv /tmp/alfresco-global.properties /tmp/spy.properties /srv/alfresco/config/ \
    && mv /tmp/alfresco /srv/alfresco/config/ \
    && find /srv/alfresco/config -type d -exec chmod +x '{}' \; \
    && mv /tmp/*.xml /etc/tomcat8/Catalina/localhost/ \
@@ -32,16 +32,16 @@ EXPOSE 8080 8081 8082 8083 5001 8000 10025 10021 11000-11099
 VOLUME ["/srv/alfresco/data"]
 
 ENV MAVEN_REQUIRED_ARTIFACTS= \
-   ALFRESCO_PLATFORM_VERSION=6.2.0-ga \
-   ALFRESCO_API_EXPLORER_VERSION=6.2.0-ga \
+   ALFRESCO_PLATFORM_VERSION=7.0.0-ga \
+   ALFRESCO_API_EXPLORER_VERSION=7.0.0 \
    ALFRESCO_MMT_VERSION=6.0 \
-   ALFRESCO_ROOT_VERSION=6.0 \
-   ALFRESCO_AOS_VERSION=1.3.0 \
-   ALFRESCO_VTI_BIN_VERSION=1.3.0 \
-   ALFRESCO_SHARE_SERVICES_VERSION=6.2.0 \
+   ALFRESCO_ROOT_VERSION=6.0.1 \
+   ALFRESCO_AOS_VERSION=1.4.0 \
+   ALFRESCO_VTI_BIN_VERSION=1.4.0 \
+   ALFRESCO_SHARE_SERVICES_VERSION=7.0.0 \
    ALFRESCO_PLATFORM_WAR_ARTIFACT= \
    ALFRESCO_PLATFORM_ROOT_WAR_ARTIFACT= \
-   MAVEN_ACTIVE_REPOSITORIES=alfresco,alfresco_ee,central,ossrh \
+   MAVEN_ACTIVE_REPOSITORIES=alfresco,central,ossrh \
    MAVEN_REPOSITORIES_central_URL=https://repo1.maven.org/maven2 \
    MAVEN_REPOSITORIES_alfresco_URL=https://artifacts.alfresco.com/nexus/content/groups/public \
    MAVEN_REPOSITORIES_alfresco_ee_URL=https://artifacts.alfresco.com/nexus/content/groups/private \

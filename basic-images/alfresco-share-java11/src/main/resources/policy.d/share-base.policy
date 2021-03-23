@@ -21,7 +21,7 @@ grant codeBase "file:\${catalina.base}/webapps/share/-" {
     permission java.security.SecurityPermission "putProviderProperty.*";
 
     // change made for SHA-2457 elevated the read permission requirement to read-write
-    permission java.util.PropertyPermission "*", "read";
+    permission java.util.PropertyPermission "*", "read,write";
 };
 
 // limited privileges for dropped in JAR extension modules

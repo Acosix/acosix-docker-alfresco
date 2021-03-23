@@ -132,7 +132,7 @@ COPY *.jar alfresco.xml ROOT.xml _vti_bin.xml api-explorer.xml policy.d alfresco
 RUN mkdir -p /srv/alfresco/config /srv/alfresco/modules /etc/tomcat8/Catalina/localhost \
    && mv /tmp/*.policy /etc/tomcat8/policy.d/ \
    && mv /tmp/*.jar /srv/alfresco/modules/ \
-   && mv /tmp/alfresco-global.properties /srv/alfresco/config/ \
+   && mv /tmp/alfresco-global.properties /tmp/spy.properties /srv/alfresco/config/ \
    && mv /tmp/alfresco /srv/alfresco/config/ \
    && find /srv/alfresco/config -type d -exec chmod +x '{}' \; \
    && mv /tmp/*.xml /etc/tomcat8/Catalina/localhost/ \
