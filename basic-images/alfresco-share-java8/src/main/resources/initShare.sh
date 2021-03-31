@@ -170,6 +170,8 @@ then
    IFS=$'\n'
    for i in `env`
    do
+      value=`echo "$i" | cut -d '=' -f 2-`
+
       if [[ $i == GLOBAL_* && -f '/srv/alfresco/config/share-global.properties' ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
