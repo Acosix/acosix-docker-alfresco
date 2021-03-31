@@ -1,5 +1,6 @@
 // any permissions relevant for most Alfresco versions
 grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
+
     // template loader looks up from server root somehow
     permission java.io.FilePermission "\${catalina.base}", "read";
     permission java.io.FilePermission "\${catalina.base}/logs", "read";
@@ -31,6 +32,7 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission java.io.FilePermission "quartz.properties", "read";
 
     permission java.io.FilePermission "cxf.xml", "read";
+    permission java.io.FilePermission "\${java.home}/lib/wsdl.properties", "read";
 
     // default lookup in library (could be changed via -Dspy.properties=)
     permission java.io.FilePermission "spy.properties", "read";
@@ -47,6 +49,7 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission java.io.FilePermission "\${java.home}/conf", "read";
     permission java.io.FilePermission "\${java.home}/conf/mime.types", "read";
     permission java.io.FilePermission "\${java.home}/lib/mime.types", "read";
+    permission java.io.FilePermission "\${user.home}/.mime.types", "read";
 
     // in older Alfresco version WSServletContextListener looks this up
     permission java.io.FilePermission "\${catalina.base}//basename", "read";
@@ -107,6 +110,9 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission javax.management.MBeanPermission "org.apache.tomcat.util.modeler.BaseModelMBean#-[-]", "queryNames,getAttribute";
 
     permission javax.management.MBeanTrustPermission "register";
+
+    // Apache CXF
+    permission javax.security.auth.AuthPermission "getPolicy";
 
     // duplicated from p6spy as it is checked against Spring due to its use of doPrivileged
     permission javax.management.MBeanPermission "-#-[-]", "queryNames";

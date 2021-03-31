@@ -1,5 +1,6 @@
 // any permissions relevant for most Alfresco versions
 grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
+
     // template loader looks up from server root somehow
     permission java.io.FilePermission "\${catalina.base}", "read";
     permission java.io.FilePermission "\${catalina.base}/logs", "read";
@@ -26,11 +27,28 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission java.io.FilePermission "/opt/openoffice.org3", "read";
     permission java.io.FilePermission "/opt/openoffice.org3/-", "read,execute";
     permission java.io.FilePermission "/var/lib/ImageMagick/-", "read,execute";
+    // Apache PDFBox NativeFontDirFinder via UnixFontDirFinder
+    permission java.io.FilePermission "\${user.home}/.fonts", "read";
+    permission java.io.FilePermission "\${user.home}/.fonts/-", "read";
+    // technically possible but property never set - here purely for documentation
+    // permission java.io.FilePermission "\${pdfbox.fontcache}/.pdfbox.cache", "read,write";
+    permission java.io.FilePermission "\${user.home}/.pdfbox.cache", "read,write";
+    // never relevant as user.home (always set) wins over java.io.tmpdir
+    permission java.io.FilePermission "\${java.io.tmpdir}/.pdfbox.cache", "read,write";
+    permission java.io.FilePermission "/usr/local/fonts", "read";
+    permission java.io.FilePermission "/usr/local/fonts/-", "read";
+    permission java.io.FilePermission "/usr/local/share/fonts", "read";
+    permission java.io.FilePermission "/usr/local/share/fonts/-", "read";
+    permission java.io.FilePermission "/usr/share/fonts", "read";
+    permission java.io.FilePermission "/usr/share/fonts/-", "read";
+    permission java.io.FilePermission "/usr/X11R6/lib/X11/fonts", "read";
+    permission java.io.FilePermission "/usr/X11R6/lib/X11/fonts/-", "read";
 
     // default lookup in library (could be changed via -Dorg.quartz.properties=)
     permission java.io.FilePermission "quartz.properties", "read";
 
     permission java.io.FilePermission "cxf.xml", "read";
+    permission java.io.FilePermission "\${java.home}/lib/wsdl.properties", "read";
 
     // default lookup in library (could be changed via -Dspy.properties=)
     permission java.io.FilePermission "spy.properties", "read";
@@ -47,6 +65,7 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission java.io.FilePermission "\${java.home}/conf", "read";
     permission java.io.FilePermission "\${java.home}/conf/mime.types", "read";
     permission java.io.FilePermission "\${java.home}/lib/mime.types", "read";
+    permission java.io.FilePermission "\${user.home}/.mime.types", "read";
 
     // in older Alfresco version WSServletContextListener looks this up
     permission java.io.FilePermission "\${catalina.base}//basename", "read";
@@ -71,6 +90,8 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission java.lang.RuntimePermission "defineClass";
     permission java.lang.RuntimePermission "getClassLoader";
     permission java.lang.RuntimePermission "getProtectionDomain";
+    permission java.lang.RuntimePermission "getStackTrace";
+    permission java.lang.RuntimePermission "reflectionFactoryAccess";
     // any library may check an env setting
     permission java.lang.RuntimePermission "getenv.*";
     permission java.lang.RuntimePermission "modifyThread";
@@ -109,6 +130,9 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission javax.management.MBeanPermission "org.apache.tomcat.util.modeler.BaseModelMBean#-[-]", "queryNames,getAttribute";
 
     permission javax.management.MBeanTrustPermission "register";
+
+    // Apache CXF
+    permission javax.security.auth.AuthPermission "getPolicy";
 
     // duplicated from p6spy as it is checked against Spring due to its use of doPrivileged
     permission javax.management.MBeanPermission "-#-[-]", "queryNames";

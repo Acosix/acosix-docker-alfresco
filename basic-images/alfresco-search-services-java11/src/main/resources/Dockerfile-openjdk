@@ -4,7 +4,7 @@ FROM ${docker.from.id}-openjdk:${docker.from.version}
 COPY downloadASS.js initASS.sh startASS.sh ASS-logrotate.d ass-ng.conf /tmp/
 
 RUN groupadd -g 12001 ass \
-   && useradd -s /bin/false -g ass -u 12001 -M ass \
+   && useradd -s /bin/false -d /var/lib/alfresco-search-services -g ass -u 12001 -M ass \
    && mkdir -p /srv/alfresco-search-services \
    && mv /tmp/downloadASS.js /srv/alfresco-search-services/ \ 
    && mv /tmp/ASS-logrotate.d /etc/logrotate.d/alfresco-search-services \

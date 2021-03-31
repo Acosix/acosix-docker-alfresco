@@ -10,7 +10,7 @@
 
     <groupId>de.acosix.docker.alfresco</groupId>
     <artifactId>acosix-docker-alfresco-parent</artifactId>
-    <version>20210323</version>
+    <version>20210331</version>
     <packaging>pom</packaging>
 
     <properties>
