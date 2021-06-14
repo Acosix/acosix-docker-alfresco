@@ -8,8 +8,9 @@ setInPropertiesFile() {
    local value="${3:-''}"
 
    # escape typical special characters in key / value (. and / for dot-separated keys or path values)
+   # note: & must be double escaped as regular interpolation unescapes it
    regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
-   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\&/g'`
+   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\\\\\&/g'`
 
    if grep --quiet -E "^#?${regexSafeKey}\s*=" ${fileName}; then
       echo "Replacing existing entry for ${key} in ${fileName}" > /proc/1/fd/1

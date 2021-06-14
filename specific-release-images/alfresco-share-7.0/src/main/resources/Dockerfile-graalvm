@@ -1,0 +1,12 @@
+FROM ${docker.from.id}-graalvm:${docker.from.version}
+
+COPY *.war *.amp *.jar /tmp/
+
+ENV MAVEN_REQUIRED_ARTIFACTS=org.orderofthebee.support-tools:support-tools-share:amp:1.2.0.0-SNAPSHOT,de.fmaul:javascript-console-share:amp:0.7-SNAPSHOT
+
+LABEL vendor="${docker.labels.vendor}" \
+   ${docker.labels.namespace}.version="${project.version.majorVersion}.${project.version.minorVersion}.${project.version.incrementalVersion}" \
+   ${docker.labels.namespace}.is-beta="" \
+   ${docker.labels.namespace}.is-production="" \
+   ${docker.labels.namespace}.release-date="${docker.labels.release-date}" \
+   ${docker.labels.namespace}.maintainer="${docker.labels.maintainer}"

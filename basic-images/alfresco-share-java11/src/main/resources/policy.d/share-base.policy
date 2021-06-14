@@ -2,6 +2,11 @@
 grant codeBase "file:\${catalina.base}/webapps/share/-" {
     // template loader looks up from server root somehow
     permission java.io.FilePermission "\${catalina.base}", "read";
+    permission java.io.FilePermission "\${catalina.base}/logs", "read";
+    permission java.io.FilePermission "\${catalina.base}/logs/*", "read,write";
+
+    permission java.io.FilePermission "\${java.io.tmpdir}", "read";
+    permission java.io.FilePermission "\${java.io.tmpdir}/-", "read,write,delete";
 
     // some reflection may be necessary (e.g. to apply patches to Alfresco code with restricted visibility)
     permission java.lang.reflect.ReflectPermission "suppressAccessChecks";
@@ -21,6 +26,7 @@ grant codeBase "file:\${catalina.base}/webapps/share/-" {
     permission java.security.SecurityPermission "putProviderProperty.*";
 
     // change made for SHA-2457 elevated the read permission requirement to read-write
+    // Spring makes use of this during env initialisation
     permission java.util.PropertyPermission "*", "read,write";
 };
 
