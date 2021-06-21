@@ -5,14 +5,14 @@
     <parent>
         <groupId>de.acosix.docker.alfresco</groupId>
         <artifactId>acosix-docker-alfresco-basic-parent</artifactId>
-        <version>20210615</version>
+        <version>20210621</version>
     </parent>
 
     <artifactId>alfresco-repository-java11</artifactId>
 
     <properties>
         <docker.from.name>baseimage-tomcat8-java11</docker.from.name>
-        <docker.from.version>20210331</docker.from.version>
+        <docker.from.version>20210621</docker.from.version>
         <p6spy.version>3.9.1</p6spy.version>
     </properties>
 
