@@ -80,6 +80,7 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission java.lang.RuntimePermission "getenv.*";
     permission java.lang.RuntimePermission "modifyThread";
     permission java.lang.RuntimePermission "setContextClassLoader";
+    permission java.lang.RuntimePermission "setFactory";
     permission java.lang.RuntimePermission "shutdownHooks";
 
     permission java.net.NetPermission "specifyStreamHandler";

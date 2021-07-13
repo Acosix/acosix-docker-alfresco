@@ -4,6 +4,7 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission java.io.FilePermission "/srv/alfresco/config/-", "read";
     // should be a mounted volume / folder for contentstore(s) and any other persistent data
     permission java.io.FilePermission "/srv/alfresco/data/-", "read,write,delete";
+    permission java.io.FilePermission "/run/secrets/-", "read";
 
     permission java.io.FilePermission "/srv/alfresco/keystore/-", "read";
 
@@ -11,6 +12,7 @@ grant codeBase "file:\${catalina.base}/webapps/alfresco/-" {
     permission java.net.SocketPermission "localhost:10021", "listen";
     permission java.net.SocketPermission "localhost:10025", "listen";
     permission java.net.SocketPermission "localhost:11000-11099", "listen";
+    permission java.net.SocketPermission "*", "accept,resolve";
 };
 
 // limited privileges for dropped in JAR extension modules
@@ -24,6 +26,7 @@ grant codeBase "file:/srv/alfresco/modules/-" {
 
     permission java.io.FilePermission "/srv/alfresco/config/-", "read";
     permission java.io.FilePermission "/srv/alfresco/data/-", "read,write,delete";
+    permission java.io.FilePermission "/run/secrets/-", "read";
 };
 
 // unfortunately P6Spy reads environment variables and properties unselectively, interacts with JMX
