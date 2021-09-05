@@ -8,6 +8,7 @@
         <version>20210713</version>
     </parent>
 
+    <version>20210905</version>
     <artifactId>alfresco-search-services-java8</artifactId>
 
     <properties>

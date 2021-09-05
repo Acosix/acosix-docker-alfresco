@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>alfresco-search-services-java11</artifactId>
+    <version>20210905</version>
 
     <properties>
         <docker.from.name>baseimage-java11</docker.from.name>

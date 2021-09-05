@@ -234,7 +234,7 @@ then
    done
 
    # always ensure ass user owns the index/config/cache
-   chown -R ass:ass /srv/alfresco-search-services
+   chown -R ass:ass /srv/alfresco-search-services/solrhome /srv/alfresco-search-services/coreConfigs /srv/alfresco-search-services/index
 
    touch /var/log/alfresco-search-services/.solr-logrotate-dummy
    touch /var/lib/alfresco-search-services/.assInitDone
