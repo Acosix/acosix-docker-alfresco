@@ -5,10 +5,9 @@
     <parent>
         <groupId>de.acosix.docker.alfresco</groupId>
         <artifactId>acosix-docker-alfresco-specific-parent</artifactId>
-        <version>20210713</version>
+        <version>20211006</version>
     </parent>
 
-    <version>20210905</version>
     <artifactId>alfresco-search-services-1.2.1</artifactId>
 
     <properties>

@@ -5,15 +5,14 @@
     <parent>
         <groupId>de.acosix.docker.alfresco</groupId>
         <artifactId>acosix-docker-alfresco-basic-parent</artifactId>
-        <version>20210713</version>
+        <version>20211006</version>
     </parent>
 
-    <version>20210905</version>
     <artifactId>alfresco-search-services-java8</artifactId>
 
     <properties>
         <docker.from.name>baseimage-java8</docker.from.name>
-        <docker.from.version>20210621</docker.from.version>
+        <docker.from.version>${project.version}</docker.from.version>
     </properties>
 
     <build>
