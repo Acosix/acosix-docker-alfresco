@@ -13,7 +13,7 @@ RUN install_clean \
     libfile-stripnondeterminism-perl \
     m4 \
     po-debconf \
-    libclang1-7 \
+    libclang1-14 \
     libsigsegv2 \
     doxygen \
     libbz2-1.0 \
@@ -46,7 +46,7 @@ RUN install_clean \
     liblzma5 \
     liblzma-dev \
     libobjc4 \
-    libobjc-5-dev \
+    libobjc-12-dev \
     libpng16-16 \
     libpng-dev \
     libpotrace0 \
@@ -97,26 +97,13 @@ RUN install_clean \
     liblcms2-dev \
     liblqr-1-0-dev \
     liblzma-dev \
-    libobjc-5-dev \
+    libobjc-12-dev \
     libpng-dev \
     libtiff5-dev \
     libwmf-dev \
     zlib1g-dev \
     libzzip-dev \
     libopenjp2-7-dev
-
-RUN wget -O /tmp/wkhtmltox.deb https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.bionic_amd64.deb \
-   && install_clean \
-     fontconfig \
-     xfonts-75dpi \
-     xfonts-base \
-     libjpeg8 \
-     libx11-6 \
-     libxcb1 \
-     libxext6 \
-     libxrender1 \
-   && apt install -y /tmp/wkhtmltox.deb \
-   && rm /tmp/wkhtmltox.deb
 
 # add Alfresco PDF Renderer
 COPY *.tgz /tmp/

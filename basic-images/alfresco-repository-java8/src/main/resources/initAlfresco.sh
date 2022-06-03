@@ -10,8 +10,8 @@ file_env() {
    local val="$def"
    # Alfresco config variables can have dots in them - while allowed for environment variable identifiers, variable substitution in bash (and other shells) does not support it
    if [[ ${var} =~ '.' ]]; then
-      local varV=`env | grep "${var}=" | cut -d '=' -f 2- || true`
-      local fileVarV=`env | grep "${fileVar}=" | cut -d '=' -f 2- || true`
+      local varV=$(env | grep "${var}=" | cut -d '=' -f 2- || true)
+      local fileVarV=$(env | grep "${fileVar}=" | cut -d '=' -f 2- || true)
 
       if [ "${varV:-}" ] && [ "${fileVarV:-}" ]; then
          echo >&2 "Error: both $var and $fileVar are set (but are exclusive)"
@@ -48,8 +48,8 @@ setInPropertiesFile() {
 
    # escape typical special characters in key / value (. and / for dot-separated keys or path values)
    # note: & must be double escaped as regular interpolation unescapes it
-   regexSafeKey=`echo "$key" | sed -r 's/\\//\\\\\//g' | sed -r 's/\\./\\\\\./g'`
-   replacementSafeValue=`echo "$value" | sed -r 's/\\//\\\\\//g' | sed -r 's/&/\\\\\\\\&/g'`
+   regexSafeKey=$(echo "$key" | sed -r 's#/#\\\\/#g' | sed -r 's#\.#\\\\.#g')
+   replacementSafeValue=$(echo "$value" | sed -r 's#/#\\\\/#g' | sed -r 's#&#\\&#g')
 
    if grep --quiet -E "^#?${regexSafeKey}\s*=" ${fileName}; then
       sed -ri "s/^#?(${regexSafeKey}\s*=)[^$]*/\1${replacementSafeValue}/" ${fileName}
@@ -200,7 +200,7 @@ then
    sed -i "s/%DB_USER%/${DB_USER}/g" /srv/alfresco/config/alfresco-global.properties
    sed -i "s/%DB_PW%/${DB_PW}/g" /srv/alfresco/config/alfresco-global.properties
 
-   ALFRESCO_ADMIN_PASSWORD=`printf '%s' "$ALFRESCO_ADMIN_PASSWORD" | iconv -t utf16le | openssl md4 | cut -d ' ' -f 2-`
+   ALFRESCO_ADMIN_PASSWORD=$(printf '%s' "$ALFRESCO_ADMIN_PASSWORD" | iconv -t utf16le | openssl md4 | cut -d ' ' -f 2-)
    sed -i "s/%ADMIN_PW%/${ALFRESCO_ADMIN_PASSWORD}/g" /srv/alfresco/config/alfresco-global.properties
 
    sed -i "s/%SEARCH_SUBSYSTEM%/${SEARCH_SUBSYSTEM}/g" /srv/alfresco/config/alfresco-global.properties
@@ -236,7 +236,7 @@ then
    sed -i "s/%PROXY_NAME%/${PROXY_NAME}/g" /srv/alfresco/config/alfresco-global.properties
    sed -i "s/%SHARE_PROXY_NAME%/${SHARE_PROXY_NAME}/g" /srv/alfresco/config/alfresco-global.properties
 
-   PUBLIC_REPO_HOST_PATTERN=`echo $PROXY_NAME | sed -e "s/\./\\\./g"`
+   PUBLIC_REPO_HOST_PATTERN=$(echo $PROXY_NAME | sed -e "s/\./\\\./g")
    sed -i "s/%PUBLIC_REPO_HOST_PATTERN%/${PUBLIC_REPO_HOST_PATTERN}/g" /srv/alfresco/config/alfresco-global.properties
    if [[ $PROXY_PORT != 80 || $PROXY_SSL_PORT != 443 ]]
    then
@@ -251,25 +251,25 @@ then
 
    # otherwise for will also cut on whitespace
    IFS=$'\n'
-   for i in `env`
+   for i in $(env)
    do
-      value=`echo "$i" | cut -d '=' -f 2-`
+      value=$(echo "$i" | cut -d '=' -f 2-)
 
       if [[ $i == GLOBAL_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
-         key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
+         key=$(echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-)
 
          # support secrets mounted via files
          # check legacy suffix -FILE, then proper _FILE (consistency with file_env)
          if [[ $key == *-FILE ]]
          then
             value="$(< "${value}")"
-            key=`echo "$key" | sed -r 's/-FILE$//'`
+            key=$(echo "$key" | sed -r 's/-FILE$//')
          elif [[ $key == *_FILE ]]
          then
             value="$(< "${value}")"
-            key=`echo "$key" | sed -r 's/_FILE$//'`
+            key=$(echo "$key" | sed -r 's/_FILE$//')
          fi
 
          setInPropertiesFile /srv/alfresco/config/alfresco-global.properties ${key} ${value}
@@ -282,8 +282,8 @@ then
       elif [[ $i == LOG4J-APPENDER_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
-         key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
-         appenderName=`echo $key | cut -d '.' -f 1`
+         key=$(echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-)
+         appenderName=$(echo $key | cut -d '.' -f 1)
 
          setInPropertiesFile /srv/alfresco/config/alfresco/extension/dev-log4j.properties "log4j.appender.${key}" ${value}
 
@@ -295,20 +295,20 @@ then
       elif [[ $i == LOG4J-LOGGER_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
-         key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
+         key=$(echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-)
 
          setInPropertiesFile /srv/alfresco/config/alfresco/extension/dev-log4j.properties "log4j.logger.${key}" ${value}
 
       elif [[ $i == LOG4J-ADDITIVITY_* ]]
       then
          echo "Processing environment variable $i" > /proc/1/fd/1
-         key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
+         key=$(echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-)
 
          setInPropertiesFile /srv/alfresco/config/alfresco/extension/dev-log4j.properties "log4j.additivity.${key}" ${value}
 
       elif [[ $i == P6SPY_* ]]
       then
-         key=`echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-`
+         key=$(echo "$i" | cut -d '=' -f 1 | cut -d '_' -f 2-)
          if [[ ! $key == ENABLED ]]
          then
             echo "Processing environment variable $i" > /proc/1/fd/1
@@ -351,7 +351,7 @@ then
 
    for descriptor in /etc/tomcat8/Catalina/localhost/*.xml
    do
-      appName=`echo "$descriptor" | cut -d '/' -f 6- | cut -d '.' -f 1`
+      appName=$(echo "$descriptor" | cut -d '/' -f 6- | cut -d '.' -f 1)
       if [[ ! -f "/var/lib/tomcat8/webapps/${appName}.war" ]]
       then
          mv $descriptor "${descriptor}.not-present"
