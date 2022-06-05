@@ -21,6 +21,12 @@ RUN mkdir -p /srv/alfresco/config /srv/alfresco/modules /etc/tomcat8/Catalina/lo
    && mv /tmp/initAlfresco.sh /etc/my_init.d/50_initAlfresco.sh \
    && chmod +x /etc/my_init.d/50_initAlfresco.sh
 
+# OpenSSL 3.0 has moved md4 (used for ALF password) into disabled legacy provider
+RUN sed -i '/default = default_sect/a legacy = legacy_sect' /etc/ssl/openssl.cnf \
+   && sed -i '/\[default_sect\]/a activate = 1' /etc/ssl/openssl.cnf \
+   && sed -i '/\[default_sect\]/i [legacy_sect]' /etc/ssl/openssl.cnf \
+   && sed -i '/\[legacy_sect\]/a activate = 1' /etc/ssl/openssl.cnf
+
 # Public HTTP ports for reverse-proxy: 8080 / 8081 (assumed secured via SSL)
 # Private HTTP ports for SOLR: 8082 / 8083 (active SSL)
 # JMX / RMI port: 5001 (aligned with SOLR + Share images so that each have a distinct port - it's hard to forward JMX / RMI otherwise due JVM having to know the public port you're exposing via Docker)
