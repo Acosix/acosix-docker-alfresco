@@ -15,7 +15,7 @@
         <docker.from.version>${project.version}</docker.from.version>
         <imagemagick.version>7.1.0-36</imagemagick.version>
         <p6spy.version>3.9.1</p6spy.version>
-        <postgresql.version>42.3.6</postgresql.version>
+        <postgresql.version>42.3.8</postgresql.version>
     </properties>
 
     <dependencies>
